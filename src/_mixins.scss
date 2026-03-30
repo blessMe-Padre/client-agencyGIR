@@ -1,0 +1,51 @@
+@use "sass:math";
+
+// Брейкпоинты
+$mobile: 480px;
+$tablet: 768px;
+$laptop: 1024px;
+$desktop: 1440px;
+
+$maxWidth: 1920;
+$maxWidthContainer: 1480;
+
+// Миксины для медиа-запросов
+@mixin mobile {
+  @media (max-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $tablet) {
+    @content;
+  }
+}
+
+@mixin laptop {
+  @media (max-width: $laptop) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (max-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin adaptiv-value($property, $startSize, $minSize) {
+    // Конвертируем пиксели в em (предполагая базовый размер 16px)
+    $minSizeEm: math.div($minSize, 16);
+    $startSizeEm: math.div($startSize, 16);
+    $addSizeEm: $startSizeEm - $minSizeEm;
+
+    // Конвертируем брейкпоинты в em
+    $breakpointMin: math.div($tablet, 16); // 48em
+    $maxWidthEm: math.div($maxWidth, 16); // 120em
+    $widthDifference: $maxWidthEm - $breakpointMin; // 72em
+
+    #{$property}: clamp(#{$minSizeEm}em,
+        calc(#{$minSizeEm}em + #{$addSizeEm} * (100vw - #{$breakpointMin}em) / #{$widthDifference}),
+        #{$startSizeEm}em);
+}

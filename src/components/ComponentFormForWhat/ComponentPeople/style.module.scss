@@ -1,0 +1,304 @@
+@use "../../../mixins" as *;
+
+.wrapper_input {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  gap: 50px;
+
+  & {
+    @include mobile {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+  }
+}
+
+.delete_section {
+  margin-top: 8px;
+  margin-left: auto;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+
+  & {
+    @include tablet {
+      width: 10px;
+    }
+  }
+}
+
+.form_content {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 10px;
+
+  & {
+    @include mobile {
+      gap: 7px;
+    }
+  }
+}
+
+.wrapper_input div {
+  display: flex;
+  align-self: start;
+  gap: 10px;
+
+  flex-direction: column;
+  width: 100%;
+}
+
+.form_title_content {
+  font-weight: 500;
+}
+
+.wrapper_name {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 10px;
+  margin-top: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--another-gray);
+
+  & {
+    @include tablet {
+      font-size: 9px;
+    }
+    @include mobile {
+      gap: 7px;
+      margin-top: 8px;
+      padding-bottom: 8px;
+    }
+  }
+}
+
+.wrapper_name div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  text-align: start;
+}
+
+.label_name {
+  & {
+    @include tablet {
+      font-size: 11px;
+      font-weight: 500;
+    }
+  }
+}
+
+.date_wrapper {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+
+  & {
+    @include tablet {
+      justify-content: flex-start;
+      margin-top: 8px;
+      gap: 15px;
+    }
+    @include mobile {
+      flex-direction: column;
+      gap: 17px;
+      margin-top: 7px;
+    }
+  }
+}
+
+.date_content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+
+  width: 400px;
+  // border: 1px solid var(--another-gray);
+
+  & {
+    @include tablet {
+      width: auto;
+      font-size: 9px;
+    }
+  }
+
+  & {
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+.date_content p {
+  font-weight: 500;
+}
+
+.smena_content p {
+  font-weight: 500;
+}
+
+.smena_content {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  & {
+    @include tablet {
+      font-size: 9px;
+    }
+  }
+}
+
+.smena_btns {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+
+  & {
+    @include tablet {
+    }
+  }
+}
+
+.smena_btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 6px;
+  min-width: 110px;
+
+  & {
+    @include tablet {
+      width: auto;
+      padding: 8px 9px;
+    }
+    @include mobile {
+      padding: 9px 24px;
+    }
+  }
+}
+
+.night {
+  border: 1px solid var(--main);
+  color: var(--main);
+}
+
+.day {
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+}
+
+.data {
+  text-align: start;
+  margin-top: 15px;
+
+  & {
+    @include mobile {
+      margin-top: 7px;
+      flex-direction: column;
+    }
+  }
+}
+
+.data label {
+  text-align: start;
+  font-weight: 400;
+}
+
+.data_wrapper {
+  display: flex;
+  gap: 18px;
+  margin-top: 20px;
+
+  & {
+    @include tablet {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-top: 7px;
+    }
+    @include mobile {
+      display: flex;
+      margin-top: 10px;
+      gap: 12px;
+    }
+  }
+}
+
+.data_wrapper_custom {
+  & {
+    @include mobile {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+  }
+}
+
+.note {
+  margin-top: 15px;
+  text-align: start;
+  border-bottom: 1px solid var(--another-gray);
+  padding-bottom: 20px;
+
+  & {
+    @include tablet {
+      font-size: 9px;
+    }
+
+    @include mobile {
+      margin-top: 7px;
+      padding-bottom: 10px;
+    }
+  }
+}
+
+.note p {
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.data_container {
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  align-items: center;
+
+  & {
+    @include tablet {
+      font-size: 9px;
+      gap: 15px;
+    }
+    @include mobile {
+      flex-direction: column;
+      align-items: start;
+      gap: 10px;
+    }
+  }
+}
+
+.data_container .data:nth-child(2) {
+  max-width: 200px;
+
+  @include mobile {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.data_container .data:nth-child(3) {
+  max-width: 200px;
+}

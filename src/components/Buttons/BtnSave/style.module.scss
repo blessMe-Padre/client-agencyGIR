@@ -1,0 +1,42 @@
+@use "../../../mixins" as *;
+
+.btn_save {
+  cursor: pointer;
+  background-color: var(--green);
+  color: var(--white);
+
+  padding: 10px 45px;
+  border-radius: 100px;
+  width: 100%;
+
+  transition: opacity 0.2s ease-in-out;
+
+  & {
+    @include tablet {
+      margin-top: 15px;
+      font-size: 12px;
+      padding: 5px 17px;
+    }
+  }
+
+  @media (max-width: 767px) and (min-width: 480px) {
+    font-size: 13px;
+    padding: 8px 25px;
+    margin-top: 10px;
+    border-radius: 4px;
+  }
+
+  & {
+    @include mobile {
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 7px;
+      padding: 12px 0;
+      border-radius: 4px;
+    }
+  }
+}
+
+.btn_save:hover {
+  opacity: 0.6;
+}

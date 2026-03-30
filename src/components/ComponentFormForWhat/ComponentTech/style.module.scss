@@ -1,0 +1,195 @@
+@use '../../../mixins' as *;
+
+.wrapper_input {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    gap: 50px;
+}
+
+.delete_section {
+    // position: absolute;
+    // top: 20px;
+    // right: 20px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.form_content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+
+    gap: 10px;
+}
+
+.wrapper_input div {
+    display: flex;
+    align-self: start;
+    gap: 10px;
+
+    flex-direction: column;
+    width: 100%;
+
+}
+
+.form_title_content {
+    font-weight: 500;
+}
+
+
+.wrapper_name {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px;
+
+    margin-top: 15px;
+
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--another-gray);
+
+    & {
+        @include tablet {
+          font-size: 9px;
+        }
+      }
+}
+
+.wrapper_name div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    text-align: start;
+}
+
+.date_wrapper {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.date_content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: start;
+
+    width: 400px;
+    // border: 1px solid var(--another-gray);
+
+    
+  & {
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+.date_content p {
+    font-weight: 500;
+}
+
+.smena_content p {
+    font-weight: 500;
+}
+
+.smena_content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+
+
+    gap: 10px;
+}
+
+.smena_btns {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.smena_btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 12px;
+
+    border-radius: 6px;
+    min-width: 110px;
+}
+
+.night {
+    border: 1px solid var(--main);
+    color: var(--main);
+}
+
+.day {
+    border: 1px solid var(--yellow);
+    color: var(--yellow);
+}
+
+.data {
+    text-align: start;
+    margin-top: 15px;
+}
+
+.data label {
+    text-align: start;
+    font-weight: 500;
+}
+
+
+.data_wrapper {
+    display: flex;
+    gap: 18px;
+
+    margin-top: 20px;
+}
+
+.note {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px;
+
+    margin-top: 15px;
+
+    border-bottom: 1px solid var(--another-gray);
+    padding-bottom: 20px;
+}
+
+.note p {
+    font-weight: 500;
+
+
+}
+
+
+.data_container {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+}
+
+.data_container .data:nth-child(2) {
+    max-width: 200px;
+}
+
+.data_container .data:nth-child(3) {
+    max-width: 200px;
+}
+
+
+.smena_btns {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}

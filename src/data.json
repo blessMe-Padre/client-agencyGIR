@@ -1,0 +1,24 @@
+{
+    "STATUS_CHECKBOXES": [
+        {
+            "value": "Worked",
+            "label": "Работал",
+            "id": "checkboxInWorked"
+        },
+        {
+            "value": "Not working",
+            "label": "Не работал",
+            "id": "checkboxNotWorked"
+        },
+        {
+            "value": "Day Off",
+            "label": "Выходной",
+            "id": "checkboxDayOff"
+        },
+        {
+            "value": "Empty",
+            "label": "Пусто",
+            "id": "checkboxEmpty"
+        }
+    ]
+}

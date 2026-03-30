@@ -1,0 +1,193 @@
+@use "../../mixins" as *;
+
+.workers_item_wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  border-radius: 10px;
+  border: 1px solid var(--another-gray);
+
+  padding: 25px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  & {
+    @include tablet {
+      margin: 6px 0;
+      padding: 15px 18px;
+      font-size: 8px;
+    }
+  }
+}
+
+.sum {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  padding: 15px 20px;
+  background-color: var(--main);
+  border-radius: 10px;
+
+  margin-top: 20px;
+
+  & {
+    @include tablet {
+      margin-top: 12px;
+      padding: 12px;
+    }
+  }
+}
+
+.sum_detail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sum_detail p:first-child {
+  color: var(--dark-gray);
+}
+
+.sum_detail p:last-of-type {
+  color: var(--white);
+}
+
+.sum_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sum_month {
+  text-transform: capitalize;
+  color: var(--dark-gray);
+}
+
+.sum_text {
+  color: var(--white);
+}
+
+.workers_item {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 40px;
+  height: 140px;
+
+  & {
+    @include tablet {
+      grid-template-columns: 80px repeat(5, 1fr);
+      gap: 11px;
+    }
+  }
+
+  & {
+    @include mobile {
+      grid-template-columns: 60px repeat(5, 1fr);
+    }
+  }
+}
+
+.worker_item_empty {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.worker_item_empty .item_table {
+  justify-content: center;
+}
+
+.worker_data {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+
+  & {
+    @include tablet {
+    }
+  }
+}
+
+.worker_data div:first {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.worker_data p:nth-child(2) {
+  font-weight: 400;
+  color: var(--another-gray);
+}
+
+.edit {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 20px;
+  height: 20px;
+
+  & {
+    @include tablet {
+      top: 15px;
+      right: 15px;
+      width: 9px;
+      height: 9px;
+    }
+  }
+
+  & {
+    @include mobile {
+      position: relative;
+      top: -12px;
+      right: 8px;
+    }
+  }
+}
+
+.item_table {
+  // margin-left: 50%;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+
+  & {
+    @include tablet {
+      gap: 6px;
+    }
+  }
+
+  @include mobile {
+    
+  }
+}
+
+.day_item {
+  font-weight: 500;
+}
+
+.time_list {
+  display: flex;
+}
+
+.item_data {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.details_static {
+  color: var(--another-gray);
+}
+
+.details_nostatic {
+  font-weight: 700;
+  color: var(--black);
+}

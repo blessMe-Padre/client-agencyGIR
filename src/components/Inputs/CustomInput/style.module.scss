@@ -1,0 +1,21 @@
+@use "../../../mixins" as *;
+
+.custom_input {
+  width: 100%;
+  background-color: var(--light-gray);
+  padding: 12px 20px;
+
+  border-radius: 6px;
+
+  & {
+    @include tablet {
+      padding: 8px 10px;
+      font-size: 9px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.custom_input::placeholder {
+  color: var(--gray);
+}

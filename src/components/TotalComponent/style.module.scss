@@ -1,0 +1,168 @@
+@use "../../mixins" as *;
+
+.workers_item_wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  border-radius: 10px;
+  border: 1px solid var(--another-gray);
+
+  padding: 25px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.sum {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  padding: 15px 20px;
+  background-color: var(--main);
+  border-radius: 10px;
+
+  margin-top: 20px;
+
+  & {
+    @include mobile {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 10px;
+    }
+  }
+}
+
+.sum_detail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  & {
+    @include mobile {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+
+      p:last-child {
+        text-align: right;
+        justify-self: end;
+      }
+    }
+  }
+}
+
+.sum_detail p:first-child {
+  color: var(--dark-gray);
+}
+
+.sum_detail p:last-of-type {
+  color: var(--white);
+}
+
+.sum_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  & {
+    @include mobile {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+
+      p:last-child {
+        text-align: right;
+        justify-self: end;
+      }
+    }
+  }
+}
+
+.sum_month {
+  text-transform: capitalize;
+  color: var(--dark-gray);
+}
+
+.sum_text {
+  color: var(--white);
+}
+
+.workers_item {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 40px;
+  height: 200px;
+}
+
+.worker_item_empty {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.worker_item_empty .item_table {
+  justify-content: center;
+}
+
+.worker_data {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+}
+
+.worker_data div:first {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.worker_data p:nth-child(2) {
+  font-weight: 400;
+  color: var(--another-gray);
+}
+
+.edit {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 20px;
+  height: 20px;
+}
+
+.item_table {
+  // margin-left: 50%;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.day_item {
+  font-weight: 500;
+}
+
+.time_list {
+  display: flex;
+}
+
+.item_data {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.details_static {
+  color: var(--another-gray);
+}
+
+.details_nostatic {
+  font-weight: 700;
+  color: var(--black);
+}

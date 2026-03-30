@@ -1,0 +1,105 @@
+@use '../../../mixins' as *;
+
+.smena_btn {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 6px;
+  min-width: 110px;
+  transition: all 0.3s ease-in-out;
+  border: 1px solid transparent;
+  /* Прозрачная граница по умолчанию */
+
+  & {
+    @include tablet {
+      width: auto;
+      min-width: unset;
+      max-width: unset;
+      padding: 7px 9px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.smena_btn svg path {
+  transition: all 0.3s ease-in-out;
+}
+
+.night {
+  border-color: var(--main);
+  color: var(--main);
+}
+
+.night svg {
+  fill: #1f2433;
+
+  & {
+    @include tablet {
+      width: 10px;
+      height: 10px;
+    }
+  }
+}
+
+.day {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.day svg {
+  fill: var(--yellow);
+
+  & {
+    @include tablet {
+      width: 10px;
+      height: 10px;
+    }
+  }
+}
+
+.active_white {
+  color: var(--white);
+  background-color: var(--yellow);
+}
+
+.active_white svg {
+  fill: var(--white);
+}
+
+.active_black {
+  color: var(--white);
+  background-color: var(--main);
+}
+
+.active_black svg {
+  color: var(--white);
+  fill: var(--white);
+}
+
+input[type='checkbox'] {
+  background-color: var(--main);
+  color: var(--white);
+  border-color: var(--main);
+}
+
+/* Активное состояние для ночи */
+input[type='checkbox']#night:checked + .night {
+  background-color: var(--main);
+  color: var(--white);
+  border-color: var(--main);
+}
+
+/* Активное состояние для дня */
+input[type='checkbox']#day:checked + .day {
+  background-color: var(--yellow);
+  color: var(--white);
+  border-color: var(--yellow);
+}

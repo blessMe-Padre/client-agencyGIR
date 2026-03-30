@@ -1,0 +1,19 @@
+@use "../../../mixins" as *;
+
+.btn_delete {
+  cursor: pointer;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  color: #e36b6b;
+  display: block;
+  min-width: 140px;
+
+  & {
+    @include tablet {
+      font-size: 9px;
+    }
+  }
+}

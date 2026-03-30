@@ -1,0 +1,65 @@
+@use "../../../mixins" as *;
+
+.btn {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--light-gray);
+
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+
+  border-radius: 10px;
+  transition: all 0.5s ease-in-out;
+
+  & {
+    @include tablet {
+      border-radius: 4px;
+      padding: 8px 0;
+      gap: 5px;
+    }
+  }
+
+  &:hover {
+    background-color: var(--main);
+  }
+
+  &:hover .btn_text {
+    color: var(--white);
+  }
+
+  &:active {
+    background-color: var(--light-green);
+  }
+
+  &:active .btn_text {
+    color: var(--main);
+  }
+}
+
+.btn_text {
+  font-weight: 700;
+  color: var(--main);
+  font-size: 14px;
+
+  transition: all 0.5s ease-in-out;
+
+  & {
+    @include tablet {
+      font-size: 11px;
+      font-weight: 500;
+    }
+  }
+}
+
+.btn img {
+  & {
+    @include tablet {
+      width: 10px;
+    }
+  }
+}

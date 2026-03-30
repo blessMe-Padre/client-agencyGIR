@@ -1,0 +1,28 @@
+@use "../../../mixins" as *;
+
+.btn {
+  cursor: pointer;
+
+  background-color: var(--light-gray);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-weight: 400;
+
+  & {
+    @include tablet {
+      padding: 4px 5px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.btn p {
+  color: var(--gray);
+  font-size: 10px;
+
+  & {
+    @include tablet {
+      font-size: 6px;
+    }
+  }
+}

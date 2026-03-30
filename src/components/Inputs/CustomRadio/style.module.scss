@@ -1,0 +1,71 @@
+@use "../../../mixins" as *;
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    & {
+        @include tablet {
+            gap: 4px;
+        }
+    }
+}
+
+.item input[type="radio"] {
+    appearance: none;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    // box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border: 1px solid var(--another-gray);
+    transition: background 0.5s, border-color 0.5s; 
+    cursor: pointer;
+
+    & {
+        @include tablet {
+            width: 10px;
+            height: 10px;
+            border-radius: 1px;
+        }
+    }
+}
+
+.item input[type="radio"]:checked {
+    background: var(--main); 
+    border-color: #FFFFFF; 
+}
+
+.item input[type="radio"]::after {
+    content: "✔";
+    color: var(--white);
+    position: absolute;
+    top: -2px;
+    left: 3px;
+    width: 0;
+    height: 0;
+    font-size: 15px;
+    transition: width 0.5s, height 0.5s, opacity 0.5s;
+    opacity: 0;
+}
+
+.item input[type="radio"]:checked::after {
+    width: 20px; 
+    height: 20px;
+    opacity: 1;
+
+    & {
+        @include tablet {
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+        }
+    }
+}
+
+.item label {
+    color: var(--another-gray);
+}

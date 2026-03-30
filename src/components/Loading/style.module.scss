@@ -1,0 +1,112 @@
+// @import '../../mixins.scss';
+@use "../../mixins" as *;
+
+.main_bg {
+  position: relative;
+
+  background-image: url("/bg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  height: 100vh;
+  width: 100%;
+}
+
+.info_text {
+  border-radius: 40px;
+  width: 200px;
+  padding: 20px;
+  background-color: var(--gray);
+  color: var(--white);
+  font-weight: 500;
+  text-transform: uppercase;
+
+  text-align: center;
+
+  margin-bottom: 32px;
+
+  @include adaptiv-value("font-size", 30, 16);
+
+  & {
+    @include tablet {
+      width: 130px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 8px 0;
+      margin-bottom: 18px;
+    }
+  }
+}
+
+.title {
+  @include adaptiv-value("font-size", 150, 80);
+
+  font-weight: 700;
+  color: var(--white);
+
+  text-transform: uppercase;
+
+  margin-bottom: 32px;
+
+  @media screen and (max-width: 480px) {
+    font-size: 70px;
+  }
+
+  & {
+    @include tablet {
+      font-size: 80px;
+      margin-bottom: 18px;
+    }
+  }
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 50px;
+
+  @include tablet {
+    padding: 88px 0;
+  }
+}
+
+.loader {
+  margin-top: 50px;
+  border: 16px solid #788899;
+  border-radius: 50%;
+  border-top: 16px solid #ffffff;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+
+  @include tablet {
+    margin: 0;
+    width: 142px;
+    height: 142px;
+  }
+}
+
+.volna {
+  position: absolute;
+  bottom: 0;
+
+  width: 100%;
+}
+
+.volna img {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

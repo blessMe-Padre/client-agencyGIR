@@ -1,0 +1,88 @@
+@use "../../mixins" as *;
+
+.search {
+  position: relative;
+  padding: 14px 20px;
+  padding-right: 40px;
+  background-color: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--another-gray);
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 110px repeat(5, 1fr);
+  gap: 10px;
+
+  & {
+    @include tablet {
+      padding: 8px 12px;
+    }
+  }
+
+  @include mobile {
+    border-radius: 4px;
+  }
+}
+
+.search_button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  transform: translateY(-50%);
+
+  & {
+    @include tablet {
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+    }
+  }
+}
+
+.list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px,
+    rgba(0, 0, 0, 0.22) 0px 15px 12px;
+  width: 100%;
+  overflow: auto;
+  padding: 10px 20px;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.item {
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--another-gray);
+  padding: 5px 10px;
+}
+
+.image {
+  position: relative;
+  display: block;
+  animation-name: anim_rotation;
+  animation-duration: 600ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(12, start);
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+}
+
+@keyframes anim_rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
