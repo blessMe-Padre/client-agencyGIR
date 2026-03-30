@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import styles from './style.module.scss';
 
-const url = 'http://89.104.67.119:1337/api/auth/local/';
+// const url = 'http://89.111.152.254:1337/api/auth/local/';
+const url = 'http://89.111.152.254:1337/api/auth/local/';
 // Иван
 // zarodiny@yandex.ru
 // 123456789

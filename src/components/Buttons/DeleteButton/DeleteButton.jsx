@@ -10,16 +10,16 @@ export default function DeleteButton({ setActive }) {
 
     switch (slug) {
         case 'object_6': {
-            url = `http://89.104.67.119:1337/api/techicas/${userId}`;
+            url = `http://89.111.152.254:1337/api/techicas/${userId}`;
         }
             break;
         case 'object_5': {
-            url = `http://89.104.67.119:1337/api/drobilkas/${userId}`;
+            url = `http://89.111.152.254:1337/api/drobilkas/${userId}`;
         }
             break;
 
         default: {
-            url = `http://89.104.67.119:1337/api/people/${userId}`;
+            url = `http://89.111.152.254:1337/api/people/${userId}`;
         }
             break;
     }

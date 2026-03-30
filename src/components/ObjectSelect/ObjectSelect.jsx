@@ -13,7 +13,7 @@ import useDataRequestStore from "../../store/DataRequestStore";
 
 import styles from "./style.module.scss";
 
-const domain = "http://89.104.67.119:1337";
+const domain = "http://89.111.152.254:1337";
 const url = `${domain}/api/objects?populate=*`;
 
 export default function ObjectSelect({ setWorkers }) {

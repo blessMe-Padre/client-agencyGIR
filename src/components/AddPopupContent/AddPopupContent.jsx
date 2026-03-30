@@ -18,20 +18,20 @@ export default function AddPopupContent({ id, active, setActive, title }) {
     case 'object_6':
       {
         formName = 'tech';
-        apiUrl = `http://89.104.67.119:1337/api/techicas?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*`;
+        apiUrl = `http://89.111.152.254:1337/api/techicas?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*`;
       }
       break;
     case 'object_5':
       {
         formName = 'drobilka';
-        apiUrl = `http://89.104.67.119:1337/api/drobilkas?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[MonthDataTonnaj][populate]=*&populate[DayDataOstatki][populate]=*`;
+        apiUrl = `http://89.111.152.254:1337/api/drobilkas?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[MonthDataTonnaj][populate]=*&populate[DayDataOstatki][populate]=*`;
       }
       break;
 
     default:
       {
         formName = 'people';
-        apiUrl = `http://89.104.67.119:1337/api/people?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[MonthDataTonnaj][populate]=*&populate[DayDataOstatki][populate]=*`;
+        apiUrl = `http://89.111.152.254:1337/api/people?filters[id][$eq]=${id}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[MonthDataTonnaj][populate]=*&populate[DayDataOstatki][populate]=*`;
       }
       break;
   }

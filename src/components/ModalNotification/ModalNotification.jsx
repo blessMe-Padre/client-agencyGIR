@@ -10,20 +10,16 @@ export default function ModalNotification({ active = false, text }) {
         const timer = setInterval(() => {
             setProgress((prev) => {
             if (prev >= 100) {
-                clearInterval(timer);
+                // clearInterval(timer);
                 return 100;
             }
             return prev + 1;
             });
         }, 30);
 
-        const reloadTimer = setTimeout(() => {
-            window.location.reload();
-        }, 3000);
-
+        
         return () => {
             clearInterval(timer);
-            clearTimeout(reloadTimer);
         };
         }
     }, [active]);

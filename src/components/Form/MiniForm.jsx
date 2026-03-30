@@ -107,7 +107,7 @@ export default function MiniForm({ title, forWhat, setActive, popupId }) {
         let url = '';
         try {
 
-            url = 'http://89.104.67.119:1337/api/objects'
+            url = 'http://89.111.152.254:1337/api/objects'
 
             formData = {
                 MonthDataObjectTonnaj: [

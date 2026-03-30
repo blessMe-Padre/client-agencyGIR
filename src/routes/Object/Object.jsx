@@ -179,7 +179,7 @@ const Object = () => {
         }
 
         const data = await fetchData(
-          `http://89.104.67.119:1337/api/objects${path}`
+          `http://89.111.152.254:1337/api/objects${path}`
         );
         let workersData = [];
 

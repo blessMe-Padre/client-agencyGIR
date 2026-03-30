@@ -37,7 +37,7 @@ const DeleteDateItem = ({ id }) => {
   const { data } = useDataRequestStore();
   const userId = data[0]?.documentId;
   const dayDataDetails = data[0]?.DayDataDetails;
-  const url = `http://89.104.67.119:1337/api/drobilkas/${userId}`;
+  const url = `http://89.111.152.254:1337/api/drobilkas/${userId}`;
 
   const handleClick = async (e) => {
     e.preventDefault();

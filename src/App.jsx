@@ -7,7 +7,7 @@ function App() {
   const [dataLoading, setDataLoading] = useState(true);
 
   // /api/objects/:id
-  const domain = 'http://89.104.67.119:1337';
+  const domain = 'http://89.111.152.254:1337';
   const url = `${domain}/api/objects?populate=*`;
 
   useEffect(() => {

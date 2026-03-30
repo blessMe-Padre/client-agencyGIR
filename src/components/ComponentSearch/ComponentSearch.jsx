@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import styles from "./style.module.scss";
 
-const domain = "http://89.104.67.119:1337";
+const domain = "http://89.111.152.254:1337";
 
 const ComponentSearch = () => {
   const [inputValue, setInputValue] = useState("");

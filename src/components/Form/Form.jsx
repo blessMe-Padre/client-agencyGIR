@@ -130,7 +130,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
     const fetchAndSetData = async () => {
       try {
         const data = await fetchData(
-          `http://89.104.67.119:1337/api/objects?filters[slug][$eq]=${slug}&populate=*`
+          `http://89.111.152.254:1337/api/objects?filters[slug][$eq]=${slug}&populate=*`
         );
         setDataObjectRequest(data);
       } catch (error) {
@@ -308,7 +308,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
     try {
       switch (forWhat) {
         case "people":
-          url = "http://89.104.67.119:1337/api/people";
+          url = "http://89.111.152.254:1337/api/people";
           formData = {
             uuid: objectUUID ? objectUUID : uuidv4(),
             Name: name || "",
@@ -413,7 +413,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           break;
 
         case "tech":
-          url = "http://89.104.67.119:1337/api/techicas";
+          url = "http://89.111.152.254:1337/api/techicas";
           formData = {
             uuid: objectUUID ? objectUUID : uuidv4(),
             Name: name || "",
@@ -487,7 +487,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           break;
 
         case "drobilka":
-          url = "http://89.104.67.119:1337/api/drobilkas";
+          url = "http://89.111.152.254:1337/api/drobilkas";
 
           formData = {
             uuid: objectUUID ? objectUUID : uuidv4(),

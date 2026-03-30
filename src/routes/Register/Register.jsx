@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import styles from './style.module.scss';
 
-const url = 'http://89.104.67.119:1337/api/auth/local/register';
+const url = 'http://89.111.152.254:1337/api/auth/local/register';
 // zarodiny@yande.ru
 
 export async function registerUserService(userData) {
