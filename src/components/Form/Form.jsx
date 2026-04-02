@@ -87,18 +87,27 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
   const [datesFromData, setDatesFromData] = useState([]);
 
-  const formattedDates = (() => {
-    const allDates = [
-      ...datesFromData,
-      ...Object.values(dates)
-        .filter((date) => date instanceof Date && !isNaN(date))
-        .map((date) =>
-          date.toLocaleDateString(formatOptions.locale, formatOptions.options)
-        ),
-    ];
+  const formattedDates = items.map((_, idx) => {
+    const fromStore = dates?.[idx];
+    if (fromStore instanceof Date && !isNaN(fromStore)) {
+      return fromStore.toLocaleDateString(
+        formatOptions.locale,
+        formatOptions.options
+      );
+    }
 
-    return allDates;
-  })();
+    const fromData = datesFromData?.[idx];
+    if (typeof fromData === "string" && fromData && fromData !== "0") {
+      return fromData;
+    }
+
+    const fromForm = formValues?.smenaDateDetails?.[idx];
+    if (typeof fromForm === "string" && fromForm && fromForm !== "0") {
+      return fromForm;
+    }
+
+    return undefined;
+  });
 
   const { dataObject, setDataObjectRequest } = useDataObjectRequestStore();
 
@@ -108,11 +117,22 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   const amountData = useWatch({ control, name: "AmountData" });
   const dayDataOstatkiPORT = useWatch({ control, name: "DayDataOstatkiPORT" });
   const dayDataOstatkiGIR = useWatch({ control, name: "DayDataOstatkiGIR" });
-  const dayDataTonnaj = useWatch({ control, name: "DayDataTonnaj" }) || "-";
-  const TC = useWatch({ control, name: "TC" }) || "-";
-  const note = useWatch({ control, name: "note" }) || "-";
+  const dayDataTonnaj = useWatch({ control, name: "DayDataTonnaj" }) ?? [];
+  const TC = useWatch({ control, name: "TC" }) ?? [];
+  const note = useWatch({ control, name: "note" }) ?? [];
   const shiftTypeArray = useWatch({ control, name: "shiftType" });
-  const statusValues = useWatch({ control, name: "statusWorker" }) ?? "Default";
+  const statusValues = useWatch({ control, name: "statusWorker" }) ?? [];
+
+  const normalizeWorkerStatus = (value) => {
+    // Strapi enum (people/drobilka): Default, Not working, Day Off, Empty
+    if (!value || value === "0") return "Default";
+    if (value === "Worked") return "Default";
+    if (value === "Default") return "Default";
+    if (value === "Not working") return "Not working";
+    if (value === "Day Off") return "Day Off";
+    if (value === "Empty") return "Empty";
+    return "Default";
+  };
 
   const objectUUID = data[0]?.uuid;
 
@@ -122,6 +142,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   };
 
   const dublicateDates = formattedDates.reduce((acc, d) => {
+    if (!d) return acc;
     acc[d] = (acc[d] || 0) + 1;
     return acc;
   }, {});
@@ -230,15 +251,15 @@ export default function Form({ title, forWhat, setActive, popupId }) {
             if (i?.DayInfo) {
               result.push(
                 i.DayInfo?.SmenaDetails?.SmenaStatusWorker ||
-                  i.DayInfo?.statusTech ||
-                  ""
+                i.DayInfo?.statusTech ||
+                ""
               );
             }
             if (i?.NightInfo) {
               result.push(
                 i.NightInfo?.SmenaDetails?.SmenaStatusWorker ||
-                  i.NightInfo?.statusTech ||
-                  ""
+                i.NightInfo?.statusTech ||
+                ""
               );
             }
             return result;
@@ -350,20 +371,19 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
           formData.DayDataDetails = items.reduce((acc, item, idx) => {
             const currentDate = formattedDates[idx];
-            const isDuplicate = dublicateDates[currentDate] >= 1;
-            const status = statusValues[idx] ?? "Default";
+            const isDuplicate = (dublicateDates[currentDate] || 0) >= 1;
+            const status = normalizeWorkerStatus(statusValues?.[idx]);
 
             if (!currentDate) {
-              console.error(`Дата не найдена для индекса ${idx}`);
-              return acc;
+              throw new Error(`MISSING_DATE:${idx}`);
             }
 
             const commonDetails = {
               Note: note?.[idx] || formValues?.note[idx],
               SmenaDataTonnaj:
                 dayDataTonnaj?.[idx] || formValues?.dayDataTonnaj[idx] || "0",
-              SmenaDateDetails: currentDate || formValues.smenaDateDetails[idx],
-              SmenaStatusWorker: status || "Default",
+              SmenaDateDetails: currentDate,
+              SmenaStatusWorker: status,
               TC: TC?.[idx] || formValues?.TC[idx] || "0",
             };
 
@@ -403,8 +423,8 @@ export default function Form({ title, forWhat, setActive, popupId }) {
                 ...(shiftType === "day"
                   ? { DayInfo: { Day: true, SmenaDetails: commonDetails } }
                   : {
-                      NightInfo: { Night: true, SmenaDetails: commonDetails },
-                    }),
+                    NightInfo: { Night: true, SmenaDetails: commonDetails },
+                  }),
               });
             }
             return acc;
@@ -463,21 +483,21 @@ export default function Form({ title, forWhat, setActive, popupId }) {
                 acc.push({
                   ...(shiftType === "day"
                     ? {
-                        DayInfo: {
-                          day: true,
-                          note: note?.[idx] || "-",
-                          date: currentDate || "0",
-                          statusTech: status,
-                        },
-                      }
+                      DayInfo: {
+                        day: true,
+                        note: note?.[idx] || "-",
+                        date: currentDate || "0",
+                        statusTech: status,
+                      },
+                    }
                     : {
-                        NightInfo: {
-                          night: true,
-                          note: note?.[idx] || "-",
-                          date: currentDate || "0",
-                          statusTech: status,
-                        },
-                      }),
+                      NightInfo: {
+                        night: true,
+                        note: note?.[idx] || "-",
+                        date: currentDate || "0",
+                        statusTech: status,
+                      },
+                    }),
                 });
               }
             }
@@ -530,19 +550,18 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
           formData.DayDataDetails = items.reduce((acc, item, idx) => {
             const currentDate = formattedDates[idx];
-            const isDuplicate = dublicateDates[currentDate] >= 1;
-            const status = statusValues[idx] ?? "Default";
+            const isDuplicate = (dublicateDates[currentDate] || 0) >= 1;
+            const status = normalizeWorkerStatus(statusValues?.[idx]);
 
             if (!currentDate) {
-              console.error(`Дата не найдена для индекса ${idx}`);
-              return acc;
+              throw new Error(`MISSING_DATE:${idx}`);
             }
 
             const commonDetails = {
               Note: note?.[idx] || formValues?.note[idx] || "default",
               SmenaDataTonnaj:
                 dayDataTonnaj?.[idx] || formValues?.dayDataTonnaj[idx] || "0",
-              SmenaDateDetails: currentDate || formValues.smenaDateDetails[idx],
+              SmenaDateDetails: currentDate,
               SmenaStatusWorker: status,
               TC: TC?.[idx] || formValues?.TC[idx] || "0",
             };
@@ -584,8 +603,8 @@ export default function Form({ title, forWhat, setActive, popupId }) {
                 ...(shiftType === "day"
                   ? { DayInfo: { Day: true, SmenaDetails: commonDetails } }
                   : {
-                      NightInfo: { Night: true, SmenaDetails: commonDetails },
-                    }),
+                    NightInfo: { Night: true, SmenaDetails: commonDetails },
+                  }),
               });
             }
             return acc;
@@ -606,14 +625,21 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           );
           if (response.status === 200) {
             setModalNotification(true);
-            setModalNotificationText("Форма отправлена ✅ Данные обновлены");
+            setModalNotificationText("Форма отправлена! Данные обновлены");
             reset();
+          } else {
+            console.error("Ошибка обновления:", response);
+            setModalNotification(true);
+            setModalNotificationText(
+              response?.data?.error?.message || "Ошибка обновления данных"
+            );
+            return;
           }
           console.log("Данные обновлены:", formData);
         } else {
           setModalNotification(true);
           setModalNotificationText(
-            "Форма отправлена ✅ Создана новая сущность"
+            "Форма отправлена! Создана новая сущность"
           );
           response = await saveUserDateService(formData, url);
           console.log("Новая запись создана:", response, formData);
@@ -626,9 +652,17 @@ export default function Form({ title, forWhat, setActive, popupId }) {
     } catch (error) {
       console.log(error);
       setModalNotification(true);
-      setModalNotificationText(
-        "Форма не будет отправлена ❌ Нужно заполнить статус"
-      );
+      const message = String(error?.message || "");
+      if (message.startsWith("MISSING_DATE:")) {
+        const idx = Number(message.split(":")[1]);
+        setModalNotificationText(
+          `Форма не будет отправлена ❌ Заполните дату (смена ${idx + 1})`
+        );
+      } else {
+        setModalNotificationText(
+          "Форма не будет отправлена ❌ Нужно заполнить статус"
+        );
+      }
     }
   };
 

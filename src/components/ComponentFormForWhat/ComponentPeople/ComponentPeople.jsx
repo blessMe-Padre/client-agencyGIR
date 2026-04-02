@@ -1,6 +1,7 @@
 import styles from './style.module.scss';
 import deleteSVG from '/delete.svg';
 import useMobile from '../../../hooks/useMobile';
+import { Fragment } from 'react';
 
 import {
   CustomInput,
@@ -231,8 +232,8 @@ export default function ComponentPeople({
 
         {items.map((item, idx) => {
           return (
-            <>
-              <div className='flex relative' id={`repeatable-${idx}`} key={idx}>
+            <Fragment key={item?.id ?? idx}>
+              <div className='flex relative' id={`repeatable-${idx}`}>
                 <div className={styles.date_wrapper}>
                   <div className={styles.date_content}>
                     <p>Дата</p>
@@ -326,7 +327,7 @@ export default function ComponentPeople({
                   idx={idx}
                 />
               </div>
-            </>
+            </Fragment>
           );
         })}
 
