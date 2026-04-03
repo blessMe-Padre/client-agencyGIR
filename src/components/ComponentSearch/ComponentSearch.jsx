@@ -1,11 +1,47 @@
 import { useState, useEffect, useRef } from "react";
 import fetchData from "../../utils/fetchData";
 import useDataRequestStore from "../../store/DataRequestStore";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import styles from "./style.module.scss";
 
 const domain = "http://89.111.152.254:1337";
+
+const toTitleCaseRu = (value) =>
+  value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => {
+      const first = word.slice(0, 1).toLocaleUpperCase("ru-RU");
+      const rest = word.slice(1).toLocaleLowerCase("ru-RU");
+      return `${first}${rest}`;
+    })
+    .join(" ");
+
+const buildNameOrFilterQuery = (field, value) => {
+  const v = value.trim();
+  if (!v) return "";
+
+  // `$containsi` в Strapi может быть регистрозависимым для кириллицы (зависит от БД/колляции),
+  // поэтому делаем OR по вариантам регистра через `$contains`.
+  const variants = new Set([
+    v,
+    v.toLocaleLowerCase("ru-RU"),
+    v.toLocaleUpperCase("ru-RU"),
+    toTitleCaseRu(v),
+  ]);
+
+  return Array.from(variants)
+    .filter(Boolean)
+    .map(
+      (variant, idx) =>
+        `filters[$or][${idx}][${field}][$contains]=${encodeURIComponent(
+          variant
+        )}`
+    )
+    .join("&");
+};
 
 const ComponentSearch = () => {
   const [inputValue, setInputValue] = useState("");
@@ -14,9 +50,7 @@ const ComponentSearch = () => {
   const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
 
-  const { data, setDataRequest, clearData } = useDataRequestStore();
-
-  const { slug } = useParams();
+  const { setDataRequest } = useDataRequestStore();
   const debounceTimeout = useRef(null);
 
   const handleChange = (e) => {
@@ -68,21 +102,46 @@ const ComponentSearch = () => {
     setLoading(true);
     debounceTimeout.current = setTimeout(async () => {
       try {
-        const peopleUrl = `${domain}/api/people?filters[Name][$containsi]=${encodeURIComponent(
-          inputValue
-        )}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[Objects][populate]=*`;
-        const techicaUrl = `${domain}/api/techicas?filters[Name][$containsi]=${encodeURIComponent(
-          inputValue
-        )}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*`;
-        const drobilkaUrl = `${domain}/api/drobilkas?filters[Name][$containsi]=${encodeURIComponent(
-          inputValue
-        )}&populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*`;
+        const nameOrFilter = buildNameOrFilterQuery("Name", inputValue);
 
-        const [peopleData, techicaData, drobilkaData] = await Promise.all([
-          fetchData(peopleUrl),
-          // fetchData(techicaUrl),
-          // fetchData(drobilkaUrl),
-        ]);
+        const peoplePopulate =
+          "populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[Objects][populate]=*";
+
+        const peopleUrl = `${domain}/api/people?${[
+          nameOrFilter,
+          peoplePopulate,
+        ]
+          .filter(Boolean)
+          .join("&")}`;
+
+        // Если позже нужно подключить технику/дробилки — просто раскомментируй блок ниже,
+        // он уже использует тот же OR-фильтр по имени.
+        //
+        // const techicaPopulate =
+        //   "populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*";
+        // const drobilkaPopulate =
+        //   "populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*";
+        //
+        // const techicaUrl = `${domain}/api/techicas?${[
+        //   nameOrFilter,
+        //   techicaPopulate,
+        // ]
+        //   .filter(Boolean)
+        //   .join("&")}`;
+        // const drobilkaUrl = `${domain}/api/drobilkas?${[
+        //   nameOrFilter,
+        //   drobilkaPopulate,
+        // ]
+        //   .filter(Boolean)
+        //   .join("&")}`;
+        //
+        // const [peopleData, techicaData, drobilkaData] = await Promise.all([
+        //   fetchData(peopleUrl),
+        //   fetchData(techicaUrl),
+        //   fetchData(drobilkaUrl),
+        // ]);
+
+        const peopleData = await fetchData(peopleUrl);
 
         const combinedResults = [
           ...peopleData,
