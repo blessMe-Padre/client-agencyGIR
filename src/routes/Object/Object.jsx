@@ -184,14 +184,7 @@ const Object = () => {
           workersData = data[0].techicas;
         } else if (slug === "object_5") {
           workersData = data[0].drobilkas;
-          console.log(
-            "Смены дробилок:",
-            (workersData || []).map((d) => ({
-              documentId: d?.documentId,
-              Name: d?.Name,
-              shifts: d?.DayDataDetailsDrobilka || [],
-            }))
-          );
+
         } else {
           workersData = data[0].workers;
         }
