@@ -80,14 +80,14 @@ const ComponentSearch = () => {
 
         const [peopleData, techicaData, drobilkaData] = await Promise.all([
           fetchData(peopleUrl),
-          fetchData(techicaUrl),
-          fetchData(drobilkaUrl),
+          // fetchData(techicaUrl),
+          // fetchData(drobilkaUrl),
         ]);
 
         const combinedResults = [
           ...peopleData,
-          ...techicaData,
-          ...drobilkaData,
+          // ...techicaData,
+          // ...drobilkaData,
         ];
 
         setData(combinedResults);
