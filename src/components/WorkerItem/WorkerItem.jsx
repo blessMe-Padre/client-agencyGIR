@@ -81,7 +81,7 @@ const WorkerDetails = ({
     let status;
     switch (slug) {
       case "object_6":
-        status = shift?.statusTech;
+        status = shift?.statusTech ?? "In working|";
         break;
 
       case "object_5":
@@ -101,6 +101,7 @@ const WorkerDetails = ({
       "Day Off": { text: "Выходной", className: "dayOf" },
       Empty: { text: "", className: "" },
       "In working": { text: "В работе", className: "inworking" },
+      "In working|": { text: "В работе", className: "inworking" },
       "Repair/to": { text: "Ремонт/ТО", className: "repair" },
       "No Coal (OC)": { text: "Отсутствие угля (О/У)", className: "noCoal" },
       Stock: { text: "Запас", className: "stock" },
@@ -150,6 +151,56 @@ const WorkerDetails = ({
       );
       const nightRow = rows.find(
         (r) => r?.Night && parseDay(r?.DayDataDetailsDrobilka) === date
+      );
+
+      return (
+        <div className={styles.item_table} key={date}>
+          <div className={styles.item_data}>
+            <div className={styles.detail}>{renderShift(dayRow, "", forWhat)}</div>
+            <CheckNoteBtn handleClick={() => handleNoteClick(dayRow?.id)} />
+            <NoteBody
+              id={dayRow?.id}
+              active={activeNote === dayRow?.id}
+              setActive={setActiveNote}
+              worker={worker}
+              data={dayRow}
+            />
+          </div>
+
+          <div className="border_top_gray"></div>
+
+          <div className={styles.item_data}>
+            <div className={styles.detail}>
+              {renderShift(nightRow, "", forWhat)}
+            </div>
+            <CheckNoteBtn handleClick={() => handleNoteClick(nightRow?.id)} />
+            <NoteBody
+              id={nightRow?.id}
+              active={activeNote === nightRow?.id}
+              setActive={setActiveNote}
+              worker={worker}
+              data={nightRow}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (slug === "object_6") {
+      const rows = worker?.DayDataTechnicaDetails || [];
+      const parseDay = (s) => {
+        const str = String(s || "");
+        if (!str) return NaN;
+        if (str.includes(".")) return parseInt(str.split(".")[0] || "", 10);
+        if (str.includes("-")) return parseInt(str.split("-")[2] || "", 10);
+        return NaN;
+      };
+
+      const dayRow = rows.find(
+        (r) => r?.Day && parseDay(r?.DayDataTechnicaDetails) === date
+      );
+      const nightRow = rows.find(
+        (r) => r?.Nigth && parseDay(r?.DayDataTechnicaDetails) === date
       );
 
       return (
@@ -303,6 +354,25 @@ export default function WorkerItem({
     if (slug === "object_5") {
       return (worker?.DayDataDetailsDrobilka || [])
         .map((r) => r?.DayDataDetailsDrobilka)
+        .filter(
+          (date, index, self) => date !== undefined && self.indexOf(date) === index
+        );
+    }
+
+    if (slug === "object_6") {
+      const normalize = (value) => {
+        if (!value) return value;
+        const str = String(value);
+        if (str.includes(".")) return str; // dd.MM.yyyy
+        if (str.includes("-")) {
+          const [yyyy, mm, dd] = str.split("T")[0].split("-");
+          if (yyyy && mm && dd) return `${dd}.${mm}.${yyyy}`;
+        }
+        return str;
+      };
+
+      return (worker?.DayDataTechnicaDetails || [])
+        .map((r) => normalize(r?.DayDataTechnicaDetails))
         .filter(
           (date, index, self) => date !== undefined && self.indexOf(date) === index
         );

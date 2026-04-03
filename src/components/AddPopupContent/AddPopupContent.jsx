@@ -19,7 +19,7 @@ export default function AddPopupContent({ id, recordId, active, setActive, title
       {
         formName = 'tech';
         apiUrl = recordId
-          ? `http://89.111.152.254:1337/api/techicas/${recordId}?populate[DayDataDetails][populate]=*&populate[objects][populate]=*`
+          ? `http://89.111.152.254:1337/api/techicas/${recordId}?populate[DayDataTechnicaDetails][populate]=*&populate[objects][populate]=*`
           : '';
       }
       break;

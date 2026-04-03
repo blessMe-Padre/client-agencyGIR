@@ -4,7 +4,7 @@ import styles from "./style.module.scss";
 import { updateUserDateService } from "../../services/update-service";
 import useDataObjectRequestStore from "../../store/DataObjectRequestStore";
 import useDataRequestStore from "../../store/DataRequestStore";
-import { format } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import fetchData from "../../utils/fetchData";
 import useMobile from "../../hooks/useMobile";
 
@@ -117,6 +117,16 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
   const [datesFromData, setDatesFromData] = useState([]);
 
+  const normalizeDateForUi = (value) => {
+    if (!value || typeof value !== "string") return value;
+    if (value.includes(".")) return value; // dd.MM.yyyy
+    if (value.includes("-")) {
+      const dt = parseISO(value);
+      return isValid(dt) ? format(dt, "dd.MM.yyyy") : value;
+    }
+    return value;
+  };
+
   const formattedDates = items.map((_, idx) => {
     const fromStore = dates?.[idx];
     if (fromStore instanceof Date && !isNaN(fromStore)) {
@@ -216,6 +226,10 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         setItems(data[0]?.DayDataDetailsDrobilka || []);
         return;
       }
+      if (forWhat === "tech") {
+        setItems(data[0]?.DayDataTechnicaDetails || []);
+        return;
+      }
 
       let itemsArray = [];
       (data[0]?.DayDataDetails || []).forEach((day) => {
@@ -231,6 +245,14 @@ export default function Form({ title, forWhat, setActive, popupId }) {
       const dates =
         data?.[0]?.DayDataDetailsDrobilka
           ?.map((d) => d?.DayDataDetailsDrobilka)
+          ?.filter(Boolean) || [];
+      setDatesFromData(dates);
+      return;
+    }
+    if (forWhat === "tech") {
+      const dates =
+        data?.[0]?.DayDataTechnicaDetails
+          ?.map((d) => normalizeDateForUi(d?.DayDataTechnicaDetails))
           ?.filter(Boolean) || [];
       setDatesFromData(dates);
       return;
@@ -265,6 +287,20 @@ export default function Form({ title, forWhat, setActive, popupId }) {
             smenaDateDetails: rows.map((r) => r?.DayDataDetailsDrobilka || "0"),
             shiftTypeArray: rows.map((r) => (r?.Day ? "day" : "night")),
             dayDataTonnaj: rows.map((r) => r?.DayDataDetailsTonnaj || "0"),
+            note: rows.map((r) => r?.note || ""),
+          };
+        }
+        if (forWhat === "tech") {
+          const rows = data[0]?.DayDataTechnicaDetails || [];
+          return {
+            Name: data[0].Name || "",
+            Order: data[0]?.Order || "",
+            shiftType: [],
+            statusWorker: rows.map((r) => r?.statusTech ?? "In working|"),
+            smenaDateDetails: rows.map((r) =>
+              normalizeDateForUi(r?.DayDataTechnicaDetails) || "0"
+            ),
+            shiftTypeArray: rows.map((r) => (r?.Day ? "day" : "night")),
             note: rows.map((r) => r?.note || ""),
           };
         }
@@ -488,62 +524,44 @@ export default function Form({ title, forWhat, setActive, popupId }) {
             objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
           };
 
-          formData.DayDataDetails = items.reduce((acc, item, idx) => {
+          formData.DayDataTechnicaDetails = items.reduce((acc, _item, idx) => {
             const currentDate = formattedDates[idx];
-            const isDuplicate = dublicateDates[currentDate] > 1;
-            const status = statusValues[idx] || "In working";
+            if (!currentDate) throw new Error(`MISSING_DATE:${idx}`);
 
-            const existingEntry = acc.find(
-              (e) =>
-                e.DayInfo?.date === currentDate ||
-                e.NightInfo?.date === currentDate
-            );
+            const shift =
+              shiftTypeArray?.[idx] ||
+              (_item?.Nigth ? "night" : _item?.Day ? "day" : "day");
+            const status =
+              statusValues?.[idx] ??
+              formValues?.statusWorker?.[idx] ??
+              "In working|";
 
-            if (isDuplicate && existingEntry) {
-              if (shiftTypeArray[idx] === "day") {
-                existingEntry.DayInfo = {
-                  day: true,
-                  note: note?.[idx] || "-",
-                  date: currentDate || "0",
-                  statusTech: status,
-                };
-              } else {
-                existingEntry.NightInfo = {
-                  night: true,
-                  note: note?.[idx] || "-",
-                  date: currentDate || "0",
-                  statusTech: status,
-                };
+            const allowed = new Set([
+              "In working|",
+              "Repair/to",
+              "No Coal (OC)",
+              "Stock",
+            ]);
+
+            const statusTech = allowed.has(status) ? status : "In working|";
+
+            const toISO = (value) => {
+              if (!value) return value;
+              if (typeof value === "string" && value.includes("-")) return value; // yyyy-mm-dd
+              if (typeof value === "string" && value.includes(".")) {
+                const [dd, mm, yyyy] = value.split(".");
+                if (dd && mm && yyyy) return `${yyyy}-${mm}-${dd}`;
               }
-            } else {
-              const shiftType = shiftTypeArray[idx]
-                ? shiftTypeArray[idx]
-                : "day";
-              if (typeof shiftType === "undefined") {
-                console.error("shiftType равен undefined для индекса", idx);
-                return acc;
-              } else {
-                acc.push({
-                  ...(shiftType === "day"
-                    ? {
-                      DayInfo: {
-                        day: true,
-                        note: note?.[idx] || "-",
-                        date: currentDate || "0",
-                        statusTech: status,
-                      },
-                    }
-                    : {
-                      NightInfo: {
-                        night: true,
-                        note: note?.[idx] || "-",
-                        date: currentDate || "0",
-                        statusTech: status,
-                      },
-                    }),
-                });
-              }
-            }
+              return value;
+            };
+
+            acc.push({
+              DayDataTechnicaDetails: toISO(currentDate),
+              Day: shift === "day",
+              Nigth: shift === "night",
+              statusTech,
+              note: note?.[idx] || formValues?.note?.[idx] || "",
+            });
             return acc;
           }, []);
 

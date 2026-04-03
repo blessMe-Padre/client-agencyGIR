@@ -8,9 +8,22 @@ export default function NoteBody({ id, active, setActive, worker, data }) {
     const createdAt = data?.createdAt;
     const documentId = data?.documentId;
 
+    const normalizeDateForUi = (value) => {
+        if (!value) return value;
+        if (value instanceof Date) return value.toLocaleDateString('ru-RU');
+        const str = String(value);
+        if (str.includes('.')) return str;
+        if (str.includes('-')) {
+            const [yyyy, mm, dd] = str.split('T')[0].split('-');
+            if (yyyy && mm && dd) return `${dd}.${mm}.${yyyy}`;
+        }
+        return str;
+    }
+
     const dateWorkered =
       data?.SmenaDetails?.SmenaDateDetails ||
       data?.DayDataDetailsDrobilka ||
+      normalizeDateForUi(data?.DayDataTechnicaDetails) ||
       data?.date;
 
     const note = data?.SmenaDetails?.Note || data?.note;
@@ -50,6 +63,10 @@ export default function NoteBody({ id, active, setActive, worker, data }) {
             break;
 
         case 'In working':
+            smenaRussian = "В работе"
+            break;
+
+        case 'In working|':
             smenaRussian = "В работе"
             break;
 

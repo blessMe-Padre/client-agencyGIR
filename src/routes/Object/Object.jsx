@@ -11,7 +11,6 @@ import {
   ComponentDate,
   ComponentSearch,
   WorkerItem,
-  ComponentTonnaj,
   ObjectSelect,
 } from "../../components";
 
@@ -132,7 +131,9 @@ const Object = () => {
 
   switch (slug) {
     case "object_6": {
-      path = `?filters[slug][$eq]=${slug}&populate[techicas][populate][DayDataDetails][populate][DayInfo][populate]=*&populate[techicas][populate][DayDataDetails][populate][NightInfo][populate]=*`;
+      // У техники в Strapi нет DayDataDetails/DayInfo/NightInfo → это даёт 400.
+      // Берём безопасно всю связь techicas.
+      path = `?filters[slug][$eq]=${slug}&populate[techicas][populate]=*`;
 
       description = {
         popupTitle: "Техника",
