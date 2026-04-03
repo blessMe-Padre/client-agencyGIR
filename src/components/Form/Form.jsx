@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import PropTypes from "prop-types";
 import styles from "./style.module.scss";
 import { updateUserDateService } from "../../services/update-service";
 import useDataObjectRequestStore from "../../store/DataObjectRequestStore";
@@ -86,21 +87,21 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   const { slug } = useParams();
   const isMobile = useMobile();
 
-  const [error, setError] = useState();
+  const [, setError] = useState();
   const [isSending, setIsSending] = useState(false);
   const [shiftType, setShiftType] = useState([]);
   const [items, setItems] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [modalNotification, setModalNotification] = useState(false);
   const [modalNotificationText, setModalNotificationText] = useState(false);
-
-  let currentMonthYear = format(new Date(), "MM.yyyy", { locale: ru });
+  const [modalNotificationVariant, setModalNotificationVariant] =
+    useState("info");
 
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    formState: { errors },
     reset,
     setValue,
   } = useForm();
@@ -154,9 +155,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   const name = useWatch({ control, name: "Name" });
   const order = useWatch({ control, name: "Order" });
   const job = useWatch({ control, name: "Job" });
-  const amountData = useWatch({ control, name: "AmountData" });
-  const dayDataOstatkiPORT = useWatch({ control, name: "DayDataOstatkiPORT" });
-  const dayDataOstatkiGIR = useWatch({ control, name: "DayDataOstatkiGIR" });
+  // const amountData = useWatch({ control, name: "AmountData" });
+  // const dayDataOstatkiPORT = useWatch({ control, name: "DayDataOstatkiPORT" });
+  // const dayDataOstatkiGIR = useWatch({ control, name: "DayDataOstatkiGIR" });
   const dayDataTonnaj = useWatch({ control, name: "DayDataTonnaj" }) ?? [];
   const TC = useWatch({ control, name: "TC" }) ?? [];
   const note = useWatch({ control, name: "note" }) ?? [];
@@ -413,6 +414,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   const onSubmit = async () => {
     setIsSending(true);
     setError(null);
+    setModalNotification(true);
+    setModalNotificationText("Отправка...");
+    setModalNotificationVariant("loading");
     let formData = {};
     let url = "";
     try {
@@ -667,6 +671,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           if (response.status === 200) {
             setModalNotification(true);
             setModalNotificationText("Форма отправлена! Данные обновлены");
+            setModalNotificationVariant("success");
             reset();
           } else {
             console.error("Ошибка обновления:", response);
@@ -674,6 +679,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
             setModalNotificationText(
               response?.data?.error?.message || "Ошибка обновления данных"
             );
+            setModalNotificationVariant("error");
             return;
           }
           console.log("Данные обновлены:", formData);
@@ -681,6 +687,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           response = await saveUserDateService(formData, url);
           setModalNotification(true);
           setModalNotificationText("Форма отправлена! Создана новая сущность");
+          setModalNotificationVariant("success");
           console.log("Новая запись создана:", response, formData);
         }
       } catch (error) {
@@ -689,6 +696,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         setModalNotificationText(
           String(error?.message || "Ошибка запроса, попробуйте позже")
         );
+        setModalNotificationVariant("error");
       } finally {
         setIsSending(false);
       }
@@ -701,16 +709,23 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         setModalNotificationText(
           `Форма не будет отправлена ❌ Заполните дату (смена ${idx + 1})`
         );
+        setModalNotificationVariant("error");
       } else if (message.startsWith("MISSING_STATUS:")) {
         const idx = Number(message.split(":")[1]);
         setModalNotificationText(
           `Форма не будет отправлена ❌ Выберите статус (смена ${idx + 1})`
         );
+        setModalNotificationVariant("error");
       } else {
         setModalNotificationText(
           "Форма не будет отправлена ❌ Нужно заполнить статус"
         );
+        setModalNotificationVariant("error");
       }
+
+      // Валидационные ошибки до запроса тоже должны завершать "отправку",
+      // иначе durationMs остаётся 0 и уведомление не автозакрывается.
+      setIsSending(false);
     }
   };
 
@@ -780,7 +795,17 @@ export default function Form({ title, forWhat, setActive, popupId }) {
       <ModalNotification
         active={modalNotification}
         text={modalNotificationText}
+        variant={modalNotificationVariant}
+        durationMs={isSending ? 0 : 3000}
+        onClose={() => setModalNotification(false)}
       />
     </>
   );
 }
+
+Form.propTypes = {
+  title: PropTypes.string,
+  forWhat: PropTypes.string,
+  setActive: PropTypes.func,
+  popupId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
