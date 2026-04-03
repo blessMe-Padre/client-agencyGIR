@@ -8,12 +8,19 @@ export default function NoteBody({ id, active, setActive, worker, data }) {
     const createdAt = data?.createdAt;
     const documentId = data?.documentId;
 
-    const dateWorkered = data?.SmenaDetails?.SmenaDateDetails || data?.date;
+    const dateWorkered =
+      data?.SmenaDetails?.SmenaDateDetails ||
+      data?.DayDataDetailsDrobilka ||
+      data?.date;
 
     const note = data?.SmenaDetails?.Note || data?.note;
 
-    const smenaDataTonnaj = data?.SmenaDetails?.SmenaDataTonnaj;
-    const smenaStatusWorker = data?.SmenaDetails?.SmenaStatusWorker || data?.statusTech;
+    const smenaDataTonnaj = data?.SmenaDetails?.SmenaDataTonnaj || data?.DayDataDetailsTonnaj;
+    const smenaStatusWorker =
+      data?.SmenaDetails?.SmenaStatusWorker ||
+      data?.statusTech ||
+      data?.statusDrobilka ||
+      'In working';
 
     let smenaRussian = ''
 

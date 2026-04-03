@@ -18,12 +18,16 @@ import { useParams } from 'react-router-dom';
 
 
 export async function checkExistingRecord(uuid, url) {
+    if (!uuid) return null;
 
     try {
-        const response = await fetch(`${url}?filters[uuid][$eq]=${uuid}`);
-        const result = await response.json();
-        // Для Strapi структура ответа: { data: [...] }
-        return result.data?.length > 0 ? result.data[0]?.documentId : null;
+        const response = await fetch(`${url}?filters[uuid][$eq]=${encodeURIComponent(String(uuid))}`);
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+            console.error('Ошибка при проверке записи:', result?.error || result);
+            return null;
+        }
+        return result?.data?.length > 0 ? result.data[0]?.documentId : null;
     } catch (error) {
         console.error('Ошибка:', error);
         return null;
@@ -39,7 +43,11 @@ export async function saveUserDateService(userData, url) {
         body: JSON.stringify({ data: { ...userData } }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+        const message = data?.error?.message || `HTTP error! Status: ${response.status}`;
+        throw new Error(message);
+    }
     return { response, data };
 }
 

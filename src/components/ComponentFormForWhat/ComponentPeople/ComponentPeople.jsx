@@ -275,6 +275,13 @@ export default function ComponentPeople({
                         label={checkbox.label}
                         checkboxId={`${checkbox.id}.${idx}`}
                         idx={idx}
+                        defaultChecked={
+                          ((item?.SmenaDetails?.SmenaStatusWorker || "Default") ===
+                          "Default"
+                            ? "Worked"
+                            : item?.SmenaDetails?.SmenaStatusWorker) ===
+                          checkbox.value
+                        }
                       />
                     ))}
                   </div>

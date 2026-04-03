@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.scss";
 import { updateUserDateService } from "../../services/update-service";
 import useDataObjectRequestStore from "../../store/DataObjectRequestStore";
@@ -25,12 +24,39 @@ import {
 
 import useDateSingleStore from "../../store/CalendarSingleStore";
 
-export async function checkExistingRecord(uuid, url) {
+export async function checkExistingRecord({ url, forWhat, objectId, name }) {
+  if (!url) return null;
+
+  const query = (() => {
+    // В Strapi фильтрация работает только по реально существующим полям.
+    // Для дробилки поле uuid отсутствует, поэтому ищем по связи с объектом.
+    if (forWhat === "drobilka" || forWhat === "tech") {
+      if (!objectId || !name) return null;
+      return `filters[objects][id][$eq]=${encodeURIComponent(
+        String(objectId)
+      )}&filters[Name][$eq]=${encodeURIComponent(String(name))}`;
+    }
+
+    if (forWhat === "people") {
+      if (!objectId || !name) return null;
+      return `filters[Objects][id][$eq]=${encodeURIComponent(
+        String(objectId)
+      )}&filters[Name][$eq]=${encodeURIComponent(String(name))}`;
+    }
+
+    return null;
+  })();
+
+  if (!query) return null;
+
   try {
-    const response = await fetch(`${url}?filters[uuid][$eq]=${uuid}`);
-    const result = await response.json();
-    // Для Strapi структура ответа: { data: [...] }
-    return result.data?.length > 0 ? result.data[0]?.documentId : null;
+    const response = await fetch(`${url}?${query}`);
+    const result = await response.json().catch(() => null);
+    if (!response.ok) {
+      console.error("Ошибка при проверке записи:", result?.error || result);
+      return null;
+    }
+    return result?.data?.length > 0 ? result.data[0]?.documentId : null;
   } catch (error) {
     console.error("Ошибка:", error);
     return null;
@@ -46,7 +72,11 @@ export async function saveUserDateService(userData, url) {
     body: JSON.stringify({ data: { ...userData } }),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = data?.error?.message || `HTTP error! Status: ${response.status}`;
+    throw new Error(message);
+  }
   return { response, data };
 }
 
@@ -134,8 +164,6 @@ export default function Form({ title, forWhat, setActive, popupId }) {
     return "Default";
   };
 
-  const objectUUID = data[0]?.uuid;
-
   const handleClick = (e) => {
     e.preventDefault();
     setItems([...items, items.length + 1]);
@@ -184,21 +212,30 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      let itemsArray = [];
-      data[0].DayDataDetails.forEach((day) => {
-        if (day.DayInfo) {
-          itemsArray.push(day.DayInfo);
-        }
-        if (day.NightInfo) {
-          itemsArray.push(day.NightInfo);
-        }
-      });
+      if (forWhat === "drobilka") {
+        setItems(data[0]?.DayDataDetailsDrobilka || []);
+        return;
+      }
 
+      let itemsArray = [];
+      (data[0]?.DayDataDetails || []).forEach((day) => {
+        if (day.DayInfo) itemsArray.push(day.DayInfo);
+        if (day.NightInfo) itemsArray.push(day.NightInfo);
+      });
       setItems(itemsArray);
     }
-  }, [data]);
+  }, [data, forWhat]);
 
   useEffect(() => {
+    if (forWhat === "drobilka") {
+      const dates =
+        data?.[0]?.DayDataDetailsDrobilka
+          ?.map((d) => d?.DayDataDetailsDrobilka)
+          ?.filter(Boolean) || [];
+      setDatesFromData(dates);
+      return;
+    }
+
     const dates =
       data[0]?.DayDataDetails?.flatMap((d) => {
         const dates = [];
@@ -212,114 +249,130 @@ export default function Form({ title, forWhat, setActive, popupId }) {
       }) || [];
 
     setDatesFromData(dates);
-  }, [data]);
+  }, [data, forWhat]);
 
   useEffect(() => {
     if (data && data[0]) {
-      const newFormDefault = {
-        Name: data[0].Name || "",
-        Job: data[0].Job || "",
-        Order: data[0]?.Order || "",
-        shiftType: [],
+      const newFormDefault = (() => {
+        if (forWhat === "drobilka") {
+          const rows = data[0]?.DayDataDetailsDrobilka || [];
+          return {
+            Name: data[0].Name || "",
+            shiftType: [],
+            // В Strapi statusDrobilka может быть null (например "В работе" не хранится в enum).
+            // Для формы трактуем null как "In working".
+            statusWorker: rows.map((r) => r?.statusDrobilka ?? "In working"),
+            smenaDateDetails: rows.map((r) => r?.DayDataDetailsDrobilka || "0"),
+            shiftTypeArray: rows.map((r) => (r?.Day ? "day" : "night")),
+            dayDataTonnaj: rows.map((r) => r?.DayDataDetailsTonnaj || "0"),
+            note: rows.map((r) => r?.note || ""),
+          };
+        }
 
-        MonthDataTonnaj:
-          data[0]?.MonthDataTonnaj?.map((m) => {
-            if (
-              m &&
-              m.MonthData !== "0" &&
-              m.MonthData !== undefined &&
-              m.MonthData !== null
-            ) {
-              const [day, month, year] = m.MonthData.split(".").map(Number);
-              const dateObj = new Date(year, month - 1, day);
-              const itemDate = format(dateObj, "dd.MM.yyyy", { locale: ru });
-              if (itemDate) {
-                return {
-                  ...m,
-                  MonthData: m.MonthData,
-                };
+        return {
+          Name: data[0].Name || "",
+          Job: data[0].Job || "",
+          Order: data[0]?.Order || "",
+
+          MonthDataTonnaj:
+            data[0]?.MonthDataTonnaj?.map((m) => {
+              if (
+                m &&
+                m.MonthData !== "0" &&
+                m.MonthData !== undefined &&
+                m.MonthData !== null
+              ) {
+                const [day, month, year] = m.MonthData.split(".").map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                const itemDate = format(dateObj, "dd.MM.yyyy", { locale: ru });
+                if (itemDate) {
+                  return {
+                    ...m,
+                    MonthData: m.MonthData,
+                  };
+                }
+              } else {
+                console.log(false);
               }
-            } else {
-              console.log(false);
-            }
-            return null;
-          })?.filter(Boolean) || [],
+              return null;
+            })?.filter(Boolean) || [],
 
-        statusWorker:
-          data[0]?.DayDataDetails?.flatMap((i) => {
-            const result = [];
-            if (i?.DayInfo) {
-              result.push(
-                i.DayInfo?.SmenaDetails?.SmenaStatusWorker ||
-                i.DayInfo?.statusTech ||
-                ""
-              );
-            }
-            if (i?.NightInfo) {
-              result.push(
-                i.NightInfo?.SmenaDetails?.SmenaStatusWorker ||
-                i.NightInfo?.statusTech ||
-                ""
-              );
-            }
-            return result;
-          }) || [],
+          statusWorker:
+            data[0]?.DayDataDetails?.flatMap((i) => {
+              const result = [];
+              if (i?.DayInfo) {
+                const raw =
+                  i.DayInfo?.SmenaDetails?.SmenaStatusWorker ||
+                  i.DayInfo?.statusTech ||
+                  "";
+                result.push(raw === "Default" ? "Worked" : raw);
+              }
+              if (i?.NightInfo) {
+                const raw =
+                  i.NightInfo?.SmenaDetails?.SmenaStatusWorker ||
+                  i.NightInfo?.statusTech ||
+                  "";
+                result.push(raw === "Default" ? "Worked" : raw);
+              }
+              return result;
+            }) || [],
 
-        smenaDateDetails:
-          data[0]?.DayDataDetails?.flatMap((i) => {
-            const result = [];
-            if (i?.DayInfo) {
-              result.push(i.DayInfo?.SmenaDetails?.SmenaDateDetails || "0");
-            }
-            if (i?.NightInfo) {
-              result.push(i.NightInfo?.SmenaDetails?.SmenaDateDetails || "0");
-            }
-            return result;
-          }) || [],
+          smenaDateDetails:
+            data[0]?.DayDataDetails?.flatMap((i) => {
+              const result = [];
+              if (i?.DayInfo) {
+                result.push(i.DayInfo?.SmenaDetails?.SmenaDateDetails || "0");
+              }
+              if (i?.NightInfo) {
+                result.push(i.NightInfo?.SmenaDetails?.SmenaDateDetails || "0");
+              }
+              return result;
+            }) || [],
 
-        shiftTypeArray:
-          data[0]?.DayDataDetails?.flatMap((i) => {
-            const res = [];
-            if (i?.DayInfo) res.push("day");
-            if (i?.NightInfo) res.push("night");
-            return res;
-          }) || [],
+          shiftType:
+            data[0]?.DayDataDetails?.flatMap((i) => {
+              const res = [];
+              if (i?.DayInfo) res.push("day");
+              if (i?.NightInfo) res.push("night");
+              return res;
+            }) || [],
 
-        dayDataTonnaj:
-          data[0]?.DayDataDetails?.flatMap((i) => {
-            const result = [];
-            if (i?.DayInfo) {
-              result.push(i.DayInfo?.SmenaDetails?.SmenaDataTonnaj || "0");
-            }
-            if (i?.NightInfo) {
-              result.push(i.NightInfo?.SmenaDetails?.SmenaDataTonnaj || "0");
-            }
-            return result;
-          }) || [],
+          dayDataTonnaj:
+            data[0]?.DayDataDetails?.flatMap((i) => {
+              const result = [];
+              if (i?.DayInfo) {
+                result.push(i.DayInfo?.SmenaDetails?.SmenaDataTonnaj || "0");
+              }
+              if (i?.NightInfo) {
+                result.push(i.NightInfo?.SmenaDetails?.SmenaDataTonnaj || "0");
+              }
+              return result;
+            }) || [],
 
-        TC:
-          data[0]?.DayDataDetails?.flatMap((i) => {
-            const result = [];
-            if (i?.DayInfo) result.push(i.DayInfo?.SmenaDetails?.TC);
-            if (i?.NightInfo) result.push(i.NightInfo?.SmenaDetails?.TC);
-            return result;
-          }) || [],
+          TC:
+            data[0]?.DayDataDetails?.flatMap((i) => {
+              const result = [];
+              if (i?.DayInfo) result.push(i.DayInfo?.SmenaDetails?.TC);
+              if (i?.NightInfo) result.push(i.NightInfo?.SmenaDetails?.TC);
+              return result;
+            }) || [],
 
-        note:
-          data[0]?.DayDataDetails?.map(
-            (i) =>
-              i?.DayInfo?.SmenaDetails?.Note ||
-              i?.NightInfo?.SmenaDetails?.Note ||
-              i?.DayInfo?.note ||
-              i?.NightInfo?.note
-          ) || [],
-      };
+          note:
+            data[0]?.DayDataDetails?.map(
+              (i) =>
+                i?.DayInfo?.SmenaDetails?.Note ||
+                i?.NightInfo?.SmenaDetails?.Note ||
+                i?.DayInfo?.note ||
+                i?.NightInfo?.note
+            ) || [],
+        };
+      })();
 
       reset(newFormDefault);
       setFormValues(newFormDefault);
       // console.log("Инициализация формы:", newFormDefault.MonthDataTonnaj);
     }
-  }, [data, reset]);
+  }, [data, forWhat, reset]);
 
   const onSubmit = async () => {
     setIsSending(true);
@@ -331,14 +384,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         case "people":
           url = "http://89.111.152.254:1337/api/people";
           formData = {
-            uuid: objectUUID ? objectUUID : uuidv4(),
             Name: name || "",
             Job: job || "",
-            Objects: [
-              {
-                id: dataObject[0]?.id,
-              },
-            ],
+            Objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
             // РАССКОМЕНТИРОВАТЬ ЕСЛИ НУЖНО ОТРАВЛЯТЬ НА КАЖДОГО РАБОТНИКА (ТАКЖЕ НУЖНО РАССКОМЕНТИТЬ ИНПУТЫ)
             // MonthDataTonnaj: [
             //     // 1. Удаляем записи ТОЛЬКО текущего месяца
@@ -396,7 +444,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
             if (isDuplicate && existingEntry) {
               const shiftType =
-                shiftTypeArray[idx] || formValues.shiftTypeArray[idx];
+                shiftTypeArray[idx] || formValues?.shiftType?.[idx];
 
               if (shiftType === "day") {
                 existingEntry.DayInfo = {
@@ -435,14 +483,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         case "tech":
           url = "http://89.111.152.254:1337/api/techicas";
           formData = {
-            uuid: objectUUID ? objectUUID : uuidv4(),
             Name: name || "",
             Order: order || data[0]?.Order,
-            objects: [
-              {
-                id: dataObject[0]?.id,
-              },
-            ],
+            objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
           };
 
           formData.DayDataDetails = items.reduce((acc, item, idx) => {
@@ -510,13 +553,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           url = "http://89.111.152.254:1337/api/drobilkas";
 
           formData = {
-            uuid: objectUUID ? objectUUID : uuidv4(),
             Name: name || "",
-            objects: [
-              {
-                id: dataObject[0]?.id,
-              },
-            ],
+            objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
+            slug: slug || "",
 
             // АНАЛОГИЧНО С СОТРУДНИКАМИ
             //     MonthDataTonnaj: [
@@ -548,65 +587,33 @@ export default function Form({ title, forWhat, setActive, popupId }) {
             //     ],
           };
 
-          formData.DayDataDetails = items.reduce((acc, item, idx) => {
+          formData.DayDataDetailsDrobilka = items.reduce((acc, _item, idx) => {
             const currentDate = formattedDates[idx];
-            const isDuplicate = (dublicateDates[currentDate] || 0) >= 1;
-            const status = normalizeWorkerStatus(statusValues?.[idx]);
+            if (!currentDate) throw new Error(`MISSING_DATE:${idx}`);
 
-            if (!currentDate) {
-              throw new Error(`MISSING_DATE:${idx}`);
-            }
+            const shift = shiftTypeArray?.[idx] || "day";
+            const rawStatus = statusValues?.[idx] ?? formValues?.statusWorker?.[idx];
+            if (!rawStatus) throw new Error(`MISSING_STATUS:${idx}`);
 
-            const commonDetails = {
-              Note: note?.[idx] || formValues?.note[idx] || "default",
-              SmenaDataTonnaj:
-                dayDataTonnaj?.[idx] || formValues?.dayDataTonnaj[idx] || "0",
-              SmenaDateDetails: currentDate,
-              SmenaStatusWorker: status,
-              TC: TC?.[idx] || formValues?.TC[idx] || "0",
+            const allowed = new Set(["Repair/to", "No Coal (OC)", "Stock"]);
+            const statusDrobilka =
+              allowed.has(rawStatus) ? rawStatus : undefined;
+
+            const row = {
+              DayDataDetailsDrobilka: currentDate,
+              DayDataDetailsTonnaj:
+                dayDataTonnaj?.[idx] || formValues?.dayDataTonnaj?.[idx] || "0",
+              note: note?.[idx] || formValues?.note?.[idx] || "",
+              Day: shift === "day",
+              Night: shift === "night",
             };
 
-            const existingEntry = acc.find((e) => {
-              return (
-                e.DayInfo?.SmenaDetails?.SmenaDateDetails === currentDate ||
-                e.NightInfo?.SmenaDetails?.SmenaDateDetails === currentDate
-              );
-            });
+            // Strapi enum для statusDrobilka не принимает "In working".
+            // Если выбран "В работе" (In working) — не отправляем поле, чтобы не ловить 400.
+            if (statusDrobilka) row.statusDrobilka = statusDrobilka;
 
-            if (isDuplicate && existingEntry) {
-              // console.log('Когда я отправляю первый раз - все работает, тут лежит два правильных объекта', existingEntry);
-              const shiftType =
-                shiftTypeArray[idx] || formValues.shiftTypeArray[idx];
+            acc.push(row);
 
-              if (shiftType === "day") {
-                existingEntry.DayInfo = {
-                  ...existingEntry.DayInfo,
-                  Day: true,
-                  SmenaDetails: {
-                    ...existingEntry.DayInfo?.SmenaDetails,
-                    ...commonDetails,
-                  },
-                };
-              } else if (shiftType === "night") {
-                existingEntry.NightInfo = {
-                  ...existingEntry.NightInfo,
-                  Night: true,
-                  SmenaDetails: {
-                    ...existingEntry.NightInfo?.SmenaDetails,
-                    ...commonDetails,
-                  },
-                };
-              }
-            } else {
-              const shiftType = shiftTypeArray[idx] || "day";
-              acc.push({
-                ...(shiftType === "day"
-                  ? { DayInfo: { Day: true, SmenaDetails: commonDetails } }
-                  : {
-                    NightInfo: { Night: true, SmenaDetails: commonDetails },
-                  }),
-              });
-            }
             return acc;
           }, []);
 
@@ -614,13 +621,29 @@ export default function Form({ title, forWhat, setActive, popupId }) {
       }
 
       try {
-        const existingRecordId = await checkExistingRecord(objectUUID, url);
+        // Если форма открыта на существующей записи (пришли данные из GET /:documentId),
+        // обновляем именно её, даже если Name меняли (иначе будет создаваться новая запись).
+        const currentRecordId = data?.[0]?.documentId;
+        const existingRecordId =
+          currentRecordId ||
+          (await checkExistingRecord({
+            url,
+            forWhat,
+            objectId: dataObject?.[0]?.id,
+            name,
+          }));
         let response;
 
         if (existingRecordId) {
+          const dataForUpdate = { ...formData };
+          // Связь с объектом при обновлении не трогаем: на Strapi она часто валит 400,
+          // если формат relation не совпадает с ожиданиями. Обновляем только данные смен.
+          delete dataForUpdate.objects;
+          delete dataForUpdate.Objects;
+
           response = await updateUserDateService(
             existingRecordId,
-            formData,
+            dataForUpdate,
             url
           );
           if (response.status === 200) {
@@ -637,15 +660,17 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           }
           console.log("Данные обновлены:", formData);
         } else {
-          setModalNotification(true);
-          setModalNotificationText(
-            "Форма отправлена! Создана новая сущность"
-          );
           response = await saveUserDateService(formData, url);
+          setModalNotification(true);
+          setModalNotificationText("Форма отправлена! Создана новая сущность");
           console.log("Новая запись создана:", response, formData);
         }
       } catch (error) {
-        setError("Ошибка запроса, попробуйте позже", error);
+        console.error("Ошибка запроса:", error);
+        setModalNotification(true);
+        setModalNotificationText(
+          String(error?.message || "Ошибка запроса, попробуйте позже")
+        );
       } finally {
         setIsSending(false);
       }
@@ -657,6 +682,11 @@ export default function Form({ title, forWhat, setActive, popupId }) {
         const idx = Number(message.split(":")[1]);
         setModalNotificationText(
           `Форма не будет отправлена ❌ Заполните дату (смена ${idx + 1})`
+        );
+      } else if (message.startsWith("MISSING_STATUS:")) {
+        const idx = Number(message.split(":")[1]);
+        setModalNotificationText(
+          `Форма не будет отправлена ❌ Выберите статус (смена ${idx + 1})`
         );
       } else {
         setModalNotificationText(

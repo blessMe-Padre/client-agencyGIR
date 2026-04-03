@@ -80,19 +80,19 @@ const DeleteDateItem = ({ id }) => {
       .map((day) => ({
         DayInfo: day.DayInfo
           ? {
-              date: day.DayInfo.date,
-              day: day.DayInfo.day,
-              note: day.DayInfo.note,
-              statusTech: day.DayInfo.statusTech,
-            }
+            date: day.DayInfo.date,
+            day: day.DayInfo.day,
+            note: day.DayInfo.note,
+            statusTech: day.DayInfo.statusTech,
+          }
           : null,
         NightInfo: day.NightInfo
           ? {
-              night: day.NightInfo.night,
-              date: day.NightInfo.date,
-              note: day.NightInfo.note,
-              statusTech: day.NightInfo.statusTech,
-            }
+            night: day.NightInfo.night,
+            date: day.NightInfo.date,
+            note: day.NightInfo.note,
+            statusTech: day.NightInfo.statusTech,
+          }
           : null,
       }));
 
@@ -138,7 +138,7 @@ export default function ComponentTech({
   const { data } = useDataRequestStore();
   return (
     <>
-      <div>
+      <div className={styles.item_row}>
         <div className={styles.wrapper_name}>
           <div>
             <label
