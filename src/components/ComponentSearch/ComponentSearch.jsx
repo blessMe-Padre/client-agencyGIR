@@ -43,6 +43,19 @@ const buildNameOrFilterQuery = (field, value) => {
     .join("&");
 };
 
+const getRecordName = (record) => record?.Name ?? record?.attributes?.Name ?? "";
+
+const getFirstObjectName = (record) => {
+  const rel =
+    record?.objects ??
+    record?.Objects ??
+    record?.attributes?.objects?.data ??
+    record?.attributes?.Objects?.data;
+
+  const first = Array.isArray(rel) ? rel[0] : rel;
+  return first?.Name ?? first?.attributes?.Name ?? "";
+};
+
 const ComponentSearch = () => {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,8 +72,7 @@ const ComponentSearch = () => {
 
   const handleClick = (person) => {
     setDataRequest(person);
-    const objectsArray = person.objects || person.Objects;
-    const name = objectsArray?.[0]?.Name;
+    const name = getFirstObjectName(person);
     switch (name) {
       case "Техника":
         navigate(`/object/object_6`);
@@ -114,39 +126,54 @@ const ComponentSearch = () => {
           .filter(Boolean)
           .join("&")}`;
 
-        // Если позже нужно подключить технику/дробилки — просто раскомментируй блок ниже,
-        // он уже использует тот же OR-фильтр по имени.
-        //
-        // const techicaPopulate =
-        //   "populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*";
-        // const drobilkaPopulate =
-        //   "populate[DayDataDetails][populate][DayInfo][populate]=*&populate[DayDataDetails][populate][NightInfo][populate]=*&populate[objects][populate]=*";
-        //
-        // const techicaUrl = `${domain}/api/techicas?${[
-        //   nameOrFilter,
-        //   techicaPopulate,
-        // ]
-        //   .filter(Boolean)
-        //   .join("&")}`;
-        // const drobilkaUrl = `${domain}/api/drobilkas?${[
-        //   nameOrFilter,
-        //   drobilkaPopulate,
-        // ]
-        //   .filter(Boolean)
-        //   .join("&")}`;
-        //
-        // const [peopleData, techicaData, drobilkaData] = await Promise.all([
-        //   fetchData(peopleUrl),
-        //   fetchData(techicaUrl),
-        //   fetchData(drobilkaUrl),
-        // ]);
+        // У техники/дробилок другие поля смен, чем у персон.
+        const techicaPopulate =
+          "populate[DayDataTechnicaDetails][populate]=*&populate[objects][populate]=*";
+        const drobilkaPopulate =
+          "populate[DayDataDetailsDrobilka][populate]=*&populate[objects][populate]=*";
 
-        const peopleData = await fetchData(peopleUrl);
+        const techicaUrl = `${domain}/api/techicas?${[
+          nameOrFilter,
+          techicaPopulate,
+        ]
+          .filter(Boolean)
+          .join("&")}`;
+        const drobilkaUrl = `${domain}/api/drobilkas?${[
+          nameOrFilter,
+          drobilkaPopulate,
+        ]
+          .filter(Boolean)
+          .join("&")}`;
+
+        const results = await Promise.allSettled([
+          fetchData(peopleUrl),
+          fetchData(techicaUrl),
+          fetchData(drobilkaUrl),
+        ]);
+
+        const [peopleResult, techicaResult, drobilkaResult] = results;
+
+        if (peopleResult.status === "rejected") {
+          console.error("Ошибка поиска people:", peopleResult.reason);
+        }
+        if (techicaResult.status === "rejected") {
+          console.error("Ошибка поиска techicas:", techicaResult.reason);
+        }
+        if (drobilkaResult.status === "rejected") {
+          console.error("Ошибка поиска drobilkas:", drobilkaResult.reason);
+        }
+
+        const peopleData =
+          peopleResult.status === "fulfilled" ? peopleResult.value : [];
+        const techicaData =
+          techicaResult.status === "fulfilled" ? techicaResult.value : [];
+        const drobilkaData =
+          drobilkaResult.status === "fulfilled" ? drobilkaResult.value : [];
 
         const combinedResults = [
           ...peopleData,
-          // ...techicaData,
-          // ...drobilkaData,
+          ...techicaData,
+          ...drobilkaData,
         ];
 
         setData(combinedResults);
@@ -195,8 +222,11 @@ const ComponentSearch = () => {
 
           {!loading &&
             dataList.map((person, index) => (
-              <li key={person.id || index} className={styles.item}>
-                <p onClick={() => handleClick(person)}>{person.Name}</p>
+              <li
+                key={person?.documentId ?? person?.id ?? index}
+                className={styles.item}
+              >
+                <p onClick={() => handleClick(person)}>{getRecordName(person)}</p>
               </li>
             ))}
         </ul>
