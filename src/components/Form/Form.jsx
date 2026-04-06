@@ -896,6 +896,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
               shiftType={shiftType}
               setItems={setItems}
               popupId={popupId}
+              dateSearch={dateSearch}
             />
           )}
 
@@ -908,6 +909,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
               shiftType={shiftType}
               setItems={setItems}
               popupId={popupId}
+              dateSearch={dateSearch}
             />
           )}
 

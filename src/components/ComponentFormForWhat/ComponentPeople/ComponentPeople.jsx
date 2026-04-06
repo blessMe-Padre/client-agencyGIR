@@ -13,6 +13,7 @@ import {
 import useDataRequestStore from '../../../store/DataRequestStore';
 
 import { STATUS_CHECKBOXES } from '../../../data.json';
+import { toYyyyMmDd } from '../../../utils/toYyyyMmDd';
 
 const DeleteDateItem = ({ id }) => {
   const { data } = useDataRequestStore();
@@ -128,7 +129,14 @@ export default function ComponentPeople({
   const { data } = useDataRequestStore();
   const isMobile = useMobile();
 
-  console.log('пикнутая дата', dateSearch);
+  const pickedYmd = dateSearch ? String(dateSearch).split('T')[0] : '';
+  const withIdx = items.map((item, idx) => ({ item, idx }));
+  const visibleRows = pickedYmd
+    ? withIdx.filter(({ item }) => {
+        const key = toYyyyMmDd(item?.SmenaDetails?.SmenaDateDetails);
+        return key === pickedYmd;
+      })
+    : withIdx;
 
   return (
     <>
@@ -232,7 +240,7 @@ export default function ComponentPeople({
           </div>
         </div>
 
-        {items.map((item, idx) => {
+        {visibleRows.map(({ item, idx }) => {
           return (
             <Fragment key={item?.id ?? idx}>
               <div className='flex relative' id={`repeatable-${idx}`}>

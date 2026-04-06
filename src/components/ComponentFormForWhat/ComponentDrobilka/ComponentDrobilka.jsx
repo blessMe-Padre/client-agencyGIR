@@ -9,6 +9,7 @@ import {
   ComponentDateSingle,
 } from '../../../components';
 import useDataRequestStore from '../../../store/DataRequestStore';
+import { toYyyyMmDd } from '../../../utils/toYyyyMmDd';
 
 const STATUS_CHECKBOXES = [
   {
@@ -104,8 +105,20 @@ export default function ComponentDrobilka({
   errors,
   shiftType,
   popupId,
+  dateSearch,
 }) {
   const { data } = useDataRequestStore();
+  const pickedYmd = dateSearch ? String(dateSearch).split('T')[0] : '';
+  const withIdx = items.map((item, idx) => ({ item, idx }));
+  const visibleRows = pickedYmd
+    ? withIdx.filter(({ item }) => {
+        const raw =
+          item?.DayDataDetailsDrobilka ||
+          item?.SmenaDetails?.SmenaDateDetails;
+        return toYyyyMmDd(raw) === pickedYmd;
+      })
+    : withIdx;
+
   return (
     <>
       <div>
@@ -151,7 +164,7 @@ export default function ComponentDrobilka({
           />
         </div>
 
-        {items.map((item, idx) => {
+        {visibleRows.map(({ item, idx }) => {
           return (
             <div className={styles.item_row} key={item?.id ?? `drobilka-row-${idx}`}>
               <div className='flex relative' id={`repeatable-${idx}`}>

@@ -2,6 +2,7 @@ import styles from './style.module.scss';
 import deleteSVG from '/delete.svg';
 
 import useDataRequestStore from '../../../store/DataRequestStore';
+import { toYyyyMmDd } from '../../../utils/toYyyyMmDd';
 import {
   CustomInput,
   AddMoreBtn,
@@ -99,8 +100,19 @@ export default function ComponentTech({
   errors,
   shiftType,
   popupId,
+  dateSearch,
 }) {
   const { data } = useDataRequestStore();
+
+  const pickedYmd = dateSearch ? String(dateSearch).split('T')[0] : '';
+  const withIdx = items.map((item, idx) => ({ item, idx }));
+  const visibleRows = pickedYmd
+    ? withIdx.filter(({ item }) => {
+        const raw =
+          item?.DayDataTechnicaDetails || item?.date;
+        return toYyyyMmDd(raw) === pickedYmd;
+      })
+    : withIdx;
 
   const normalizeDateForUi = (value) => {
     if (!value) return value;
@@ -156,7 +168,7 @@ export default function ComponentTech({
           </div>
         </div>
 
-        {items.map((item, idx) => {
+        {visibleRows.map(({ item, idx }) => {
           return (
             <div key={item?.id ?? `tech-row-${idx}`}>
               <div className='flex relative' id={`repeatable-${idx}`}>
