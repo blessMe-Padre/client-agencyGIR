@@ -81,6 +81,130 @@ export async function saveUserDateService(userData, url) {
   return { response, data };
 }
 
+/** dd.MM.yyyy → MM.yyyy для сопоставления записей за месяц */
+function monthYearFromDdMmYyyy(value) {
+  if (!value || typeof value !== "string") return null;
+  const parts = value.split(".");
+  if (parts.length !== 3) return null;
+  const [dd, mm, yyyy] = parts.map(Number);
+  if (!mm || !yyyy || Number.isNaN(mm) || Number.isNaN(yyyy)) return null;
+  const d = new Date(yyyy, mm - 1, dd || 1);
+  if (Number.isNaN(d.getTime())) return null;
+  return format(d, "MM.yyyy", { locale: ru });
+}
+
+function stripRepeatableComponentMeta(item) {
+  if (!item || typeof item !== "object") return item;
+  const rest = { ...item };
+  delete rest.id;
+  delete rest.documentId;
+  delete rest.__temp_key__;
+  return rest;
+}
+
+function parseDdMmYyyyTime(s) {
+  const p = s?.split(".");
+  if (!p || p.length !== 3) return 0;
+  const [d, m, y] = p.map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
+function monthDataTonnajForForm(records) {
+  return (
+    records
+      ?.map((m) => {
+        if (
+          m &&
+          m.MonthData !== "0" &&
+          m.MonthData !== undefined &&
+          m.MonthData !== null
+        ) {
+          const [day, month, year] = m.MonthData.split(".").map(Number);
+          const dateObj = new Date(year, month - 1, day);
+          const itemDate = format(dateObj, "dd.MM.yyyy", { locale: ru });
+          if (itemDate) {
+            return {
+              ...m,
+              MonthData: m.MonthData,
+            };
+          }
+        } else {
+          console.log(false);
+        }
+        return null;
+      })
+      ?.filter(Boolean) || []
+  );
+}
+
+function buildMergedMonthTonnajAndOstatki({
+  formValues,
+  dataRoot,
+  formattedDates,
+  amountData,
+  dayDataOstatkiPORT,
+  dayDataOstatkiGIR,
+}) {
+  const currentMonthYear = format(new Date(), "MM.yyyy", { locale: ru });
+  const firstShiftDate = formattedDates.find((d) => d && d !== "0");
+  const monthDataAnchor =
+    firstShiftDate &&
+    monthYearFromDdMmYyyy(firstShiftDate) === currentMonthYear
+      ? firstShiftDate
+      : format(
+          new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          "dd.MM.yyyy",
+          { locale: ru }
+        );
+
+  const prevMonthDataTonnaj =
+    formValues.MonthDataTonnaj ?? dataRoot?.MonthDataTonnaj ?? [];
+  const monthDataTonnajMerged = [
+    ...prevMonthDataTonnaj
+      .filter(
+        (item) =>
+          monthYearFromDdMmYyyy(item?.MonthData) !== currentMonthYear
+      )
+      .map(stripRepeatableComponentMeta),
+    {
+      MonthData: monthDataAnchor,
+      AmountData:
+        amountData != null && amountData !== ""
+          ? String(amountData)
+          : "0",
+    },
+  ].sort((a, b) => parseDdMmYyyyTime(a.MonthData) - parseDdMmYyyyTime(b.MonthData));
+
+  const prevDayDataOstatki =
+    formValues.DayDataOstatki ?? dataRoot?.DayDataOstatki ?? [];
+  const portVal =
+    dayDataOstatkiPORT != null && dayDataOstatkiPORT !== ""
+      ? String(dayDataOstatkiPORT)
+      : "0";
+  const girVal =
+    dayDataOstatkiGIR != null && dayDataOstatkiGIR !== ""
+      ? String(dayDataOstatkiGIR)
+      : "0";
+  const dayDataOstatkiMerged = [
+    ...prevDayDataOstatki
+      .filter(
+        (item) =>
+          monthYearFromDdMmYyyy(item?.DayDataOstatki) !== currentMonthYear
+      )
+      .map(stripRepeatableComponentMeta),
+    {
+      DayDataOstatki: monthDataAnchor,
+      DayDataOstatkiPORT: portVal,
+      DayDataOstatkiGIR: girVal,
+    },
+  ].sort(
+    (a, b) =>
+      parseDdMmYyyyTime(a.DayDataOstatki) - parseDdMmYyyyTime(b.DayDataOstatki)
+  );
+
+  return { monthDataTonnajMerged, dayDataOstatkiMerged };
+}
+
 export default function Form({ title, forWhat, setActive, popupId }) {
   const { data } = useDataRequestStore();
   const { dates } = useDateSingleStore();
@@ -156,9 +280,9 @@ export default function Form({ title, forWhat, setActive, popupId }) {
   const name = useWatch({ control, name: "Name" });
   const order = useWatch({ control, name: "Order" });
   const job = useWatch({ control, name: "Job" });
-  // const amountData = useWatch({ control, name: "AmountData" });
-  // const dayDataOstatkiPORT = useWatch({ control, name: "DayDataOstatkiPORT" });
-  // const dayDataOstatkiGIR = useWatch({ control, name: "DayDataOstatkiGIR" });
+  const amountData = useWatch({ control, name: "AmountData" });
+  const dayDataOstatkiPORT = useWatch({ control, name: "DayDataOstatkiPORT" });
+  const dayDataOstatkiGIR = useWatch({ control, name: "DayDataOstatkiGIR" });
   const dayDataTonnaj = useWatch({ control, name: "DayDataTonnaj" }) ?? [];
   const TC = useWatch({ control, name: "TC" }) ?? [];
   const note = useWatch({ control, name: "note" }) ?? [];
@@ -280,8 +404,21 @@ export default function Form({ title, forWhat, setActive, popupId }) {
       const newFormDefault = (() => {
         if (forWhat === "drobilka") {
           const rows = data[0]?.DayDataDetailsDrobilka || [];
+          const nowMonthYear = format(new Date(), "MM.yyyy", { locale: ru });
+          const monthTonnajRow = (data[0]?.MonthDataTonnaj || []).find(
+            (m) =>
+              m?.MonthData &&
+              monthYearFromDdMmYyyy(m.MonthData) === nowMonthYear
+          );
+
           return {
             Name: data[0].Name || "",
+            AmountData:
+              monthTonnajRow?.AmountData != null &&
+              monthTonnajRow?.AmountData !== ""
+                ? String(monthTonnajRow.AmountData)
+                : "",
+            MonthDataTonnaj: monthDataTonnajForForm(data[0]?.MonthDataTonnaj),
             shiftType: [],
             // В Strapi statusDrobilka может быть null (например "В работе" не хранится в enum).
             // Для формы трактуем null как "In working".
@@ -307,33 +444,40 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           };
         }
 
+        const nowMonthYear = format(new Date(), "MM.yyyy", { locale: ru });
+        const monthTonnajRow = (data[0]?.MonthDataTonnaj || []).find(
+          (m) =>
+            m?.MonthData &&
+            monthYearFromDdMmYyyy(m.MonthData) === nowMonthYear
+        );
+        const ostatkiRow =
+          (data[0]?.DayDataOstatki || []).find(
+            (o) =>
+              o?.DayDataOstatki &&
+              monthYearFromDdMmYyyy(o.DayDataOstatki) === nowMonthYear
+          ) || data[0]?.DayDataOstatki?.[0];
+
         return {
           Name: data[0].Name || "",
           Job: data[0].Job || "",
           Order: data[0]?.Order || "",
 
-          MonthDataTonnaj:
-            data[0]?.MonthDataTonnaj?.map((m) => {
-              if (
-                m &&
-                m.MonthData !== "0" &&
-                m.MonthData !== undefined &&
-                m.MonthData !== null
-              ) {
-                const [day, month, year] = m.MonthData.split(".").map(Number);
-                const dateObj = new Date(year, month - 1, day);
-                const itemDate = format(dateObj, "dd.MM.yyyy", { locale: ru });
-                if (itemDate) {
-                  return {
-                    ...m,
-                    MonthData: m.MonthData,
-                  };
-                }
-              } else {
-                console.log(false);
-              }
-              return null;
-            })?.filter(Boolean) || [],
+          AmountData:
+            monthTonnajRow?.AmountData != null &&
+            monthTonnajRow?.AmountData !== ""
+              ? String(monthTonnajRow.AmountData)
+              : "",
+          DayDataOstatkiPORT:
+            ostatkiRow?.DayDataOstatkiPORT != null
+              ? String(ostatkiRow.DayDataOstatkiPORT)
+              : "",
+          DayDataOstatkiGIR:
+            ostatkiRow?.DayDataOstatkiGIR != null
+              ? String(ostatkiRow.DayDataOstatkiGIR)
+              : "",
+          DayDataOstatki: data[0]?.DayDataOstatki || [],
+
+          MonthDataTonnaj: monthDataTonnajForForm(data[0]?.MonthDataTonnaj),
 
           statusWorker:
             data[0]?.DayDataDetails?.flatMap((i) => {
@@ -422,40 +566,24 @@ export default function Form({ title, forWhat, setActive, popupId }) {
     let url = "";
     try {
       switch (forWhat) {
-        case "people":
+        case "people": {
           url = "http://89.111.152.254:1337/api/people";
+          const { monthDataTonnajMerged, dayDataOstatkiMerged } =
+            buildMergedMonthTonnajAndOstatki({
+              formValues,
+              dataRoot: data?.[0],
+              formattedDates,
+              amountData,
+              dayDataOstatkiPORT,
+              dayDataOstatkiGIR,
+            });
+
           formData = {
             Name: name || "",
             Job: job || "",
             Objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
-            // РАССКОМЕНТИРОВАТЬ ЕСЛИ НУЖНО ОТРАВЛЯТЬ НА КАЖДОГО РАБОТНИКА (ТАКЖЕ НУЖНО РАССКОМЕНТИТЬ ИНПУТЫ)
-            // MonthDataTonnaj: [
-            //     // 1. Удаляем записи ТОЛЬКО текущего месяца
-            //     ...(formValues.MonthDataTonnaj?.filter(item => {
-            //         const [day, month, year] = item.MonthData.split('.');
-            //         return `${month}.${year}` !== currentMonthYear;
-            //     }).map(({ id, ...rest }) => rest) || []),
-
-            //     // 2. Добавляем новую запись текущего месяца
-            //     ...(amountData !== "0" ? [{
-            //         MonthData: formattedDates[0],
-            //         AmountData: amountData
-            //     }] : [])
-            // ]
-            // // Сортировка по дате (если нужна)
-            // .sort((a, b) => new Date(
-            //     a.MonthData.split('.').reverse().join('-')
-            // ) - new Date(
-            //     b.MonthData.split('.').reverse().join('-')
-            // )),
-
-            // DayDataOstatki: [
-            //     {
-            //         DayDataOstatki: formattedDates[0] || '0',
-            //         DayDataOstatkiGIR: dayDataOstatkiGIR || "0",
-            //         DayDataOstatkiPORT: dayDataOstatkiPORT || "0",
-            //     },
-            // ],
+            MonthDataTonnaj: monthDataTonnajMerged,
+            DayDataOstatki: dayDataOstatkiMerged,
           };
 
           formData.DayDataDetails = items.reduce((acc, item, idx) => {
@@ -520,6 +648,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           }, []);
 
           break;
+        }
 
         case "tech":
           url = "http://89.111.152.254:1337/api/techicas";
@@ -572,42 +701,23 @@ export default function Form({ title, forWhat, setActive, popupId }) {
 
           break;
 
-        case "drobilka":
+        case "drobilka": {
           url = "http://89.111.152.254:1337/api/drobilkas";
+
+          const { monthDataTonnajMerged } = buildMergedMonthTonnajAndOstatki({
+            formValues,
+            dataRoot: data?.[0],
+            formattedDates,
+            amountData,
+            dayDataOstatkiPORT,
+            dayDataOstatkiGIR,
+          });
 
           formData = {
             Name: name || "",
             objects: dataObject?.[0]?.id ? [dataObject[0].id] : [],
             slug: slug || "",
-
-            // АНАЛОГИЧНО С СОТРУДНИКАМИ
-            //     MonthDataTonnaj: [
-            //         // 1. Удаляем записи ТОЛЬКО текущего месяца
-            //         ...(formValues.MonthDataTonnaj?.filter(item => {
-            //             const [day, month, year] = item.MonthData.split('.');
-            //             return `${month}.${year}` !== currentMonthYear;
-            //         }).map(({ id, ...rest }) => rest) || []),
-
-            //         // 2. Добавляем новую запись текущего месяца
-            //         ...(amountData !== "0" ? [{
-            //             MonthData: formattedDates[0],
-            //             AmountData: amountData
-            //         }] : [])
-            //     ]
-            //         // Сортировка по дате (если нужна)
-            //         .sort((a, b) => new Date(
-            //             a.MonthData.split('.').reverse().join('-')
-            //         ) - new Date(
-            //             b.MonthData.split('.').reverse().join('-')
-            //         )),
-
-            //     DayDataOstatki: [
-            //         {
-            //             DayDataOstatki: formattedDates[0] || '0',
-            //             DayDataOstatkiGIR: dayDataOstatkiGIR || "0",
-            //             DayDataOstatkiPORT: dayDataOstatkiPORT || "0",
-            //         },
-            //     ],
+            MonthDataTonnaj: monthDataTonnajMerged,
           };
 
           formData.DayDataDetailsDrobilka = items.reduce((acc, _item, idx) => {
@@ -641,6 +751,7 @@ export default function Form({ title, forWhat, setActive, popupId }) {
           }, []);
 
           break;
+        }
       }
 
       try {

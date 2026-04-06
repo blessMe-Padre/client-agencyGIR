@@ -128,7 +128,7 @@ export default function ComponentPeople({
   const { data } = useDataRequestStore();
   const isMobile = useMobile();
 
-  console.log(dateSearch);
+  console.log('пикнутая дата', dateSearch);
 
   return (
     <>
