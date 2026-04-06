@@ -100,6 +100,14 @@ function TotalComponent({ object, allDates }) {
     }
   });
 
+  // Дробилки: тоннаж в DayDataDetailsDrobilka / DayDataDetailsTonnaj (не DayDataDetails)
+  (object?.DayDataDetailsDrobilka || []).forEach((row) => {
+    const date = normalizeDateForCompare(row?.DayDataDetailsDrobilka);
+    if (!date || !allDates.includes(date)) return;
+    const tonnaj = parseFloat(row?.DayDataDetailsTonnaj);
+    totalSumTonnaj += isNaN(tonnaj) ? 0 : tonnaj;
+  });
+
   let totalSumTonnajPlan = 0;
   let totalSumOstatokGir = 0;
   let totalSumOstatokPort = 0;
