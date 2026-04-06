@@ -133,9 +133,9 @@ export default function ComponentPeople({
   const withIdx = items.map((item, idx) => ({ item, idx }));
   const visibleRows = pickedYmd
     ? withIdx.filter(({ item }) => {
-        const key = toYyyyMmDd(item?.SmenaDetails?.SmenaDateDetails);
-        return key === pickedYmd;
-      })
+      const key = toYyyyMmDd(item?.SmenaDetails?.SmenaDateDetails);
+      return key === pickedYmd;
+    })
     : withIdx;
 
   return (
